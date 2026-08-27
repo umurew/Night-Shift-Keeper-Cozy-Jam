@@ -1,0 +1,7 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/User%20Interface/DayTransition%20StyleSheet.uss?fileID=7433441132597879392&amp;guid=299f7271c744dbd4e825615b9ae586f3&amp;type=3#DayTransition StyleSheet"/>
+    <VisualElement name="fade-overlay" class="fade-overlay-hidden">
+        <Label name="day-label" text="DAY 1" class="day-text" />
+        <Label name="objective-label" text="Survive the night" class="objective-text" />
+    </VisualElement>
+</UXML>

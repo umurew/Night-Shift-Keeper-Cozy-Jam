@@ -1,0 +1,9 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/User%20Interface/Prompt%20StyleSheet.uss?fileID=7433441132597879392&amp;guid=fb622676f6b37ef4f96db794d779e3dd&amp;type=3#Prompt StyleSheet"/>
+    <VisualElement name="HUDContainer" class="hud-container">
+        <VisualElement name="PromptContainer" class="prompt-container">
+            <Label name="PromptLabel" text="Prompt Label" class="prompt-label"/>
+            <Label name="PromptHeader" text="Prompt Header" class="prompt-header"/>
+        </VisualElement>
+    </VisualElement>
+</UXML>

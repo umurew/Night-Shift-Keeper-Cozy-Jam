@@ -44,3 +44,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdf78055954ba3e449062c76ab93f92c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InputService
+  cameras: []

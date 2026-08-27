@@ -1,0 +1,16 @@
+.crosshair {
+    width: 4px;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 3px;
+    position: absolute;
+}
+
+.hud-container {
+	flex-grow: 1;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	justify-content: center;
+	align-items: center;
+}

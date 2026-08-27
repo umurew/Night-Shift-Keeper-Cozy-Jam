@@ -1,15 +1,24 @@
+using System.Collections.Generic;
+using Unity.Cinemachine;
 using UnityEngine;
 
 public class InputService : ServiceBase, IInputService
 {
-    private InputActions _inputActions;
-
+    [Header("References")]
     public InputActions.PlayerActions PlayerActions => _inputActions.Player;
     public InputActions.UIActions UIActions => _inputActions.UI;
+
+    private InputActions _inputActions;
+    private List<CinemachineCamera> _cameras;
 
     public override void Initialize()
     {
         _inputActions = new();
+        _cameras = new List<CinemachineCamera>(FindObjectsByType<CinemachineCamera>());
+
+        foreach (CinemachineCamera camera in _cameras)
+            Debug.Log($"CAMERA FOUND!!! {camera.name}");
+
         base.Initialize();
     }
 
@@ -18,7 +27,9 @@ public class InputService : ServiceBase, IInputService
         PlayerActions.Enable();
         UIActions.Enable();
 
-        Debug.Log($"{GetType().Name} initialized with the following dependencies:\n\t- InputActions");
+        DisablePlayerControls();
+
+        Debug.Log($"{GetType().Name} initialized with the following dependencies: Input Actions");
     }
 
     public void SetCursorState(bool isLocked)
@@ -30,12 +41,14 @@ public class InputService : ServiceBase, IInputService
     public void EnablePlayerControls()
     {
         SetCursorState(true);
+        ToggleCameraInput(true);
         PlayerActions.Enable();
     }
 
     public void DisablePlayerControls()
     {
         SetCursorState(false);
+        ToggleCameraInput(false);
         PlayerActions.Disable();
     }
 
@@ -50,6 +63,18 @@ public class InputService : ServiceBase, IInputService
         }
 
         Debug.Log($"{GetType().Name} disposed.");
+    }
+
+    private void ToggleCameraInput(bool isEnabled)
+    {
+        foreach (CinemachineCamera cinemachineCamera in _cameras)
+        {
+            if (cinemachineCamera == null)
+                continue;
+
+            if (cinemachineCamera.TryGetComponent(out CinemachineInputAxisController cinemachineInputAxisController))
+                cinemachineInputAxisController.enabled = isEnabled;
+        }
     }
 
     private void OnDestroy()

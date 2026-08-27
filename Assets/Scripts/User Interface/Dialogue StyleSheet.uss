@@ -1,0 +1,22 @@
+.dialog-container {
+    position: absolute;
+    bottom: 10%;
+    left: 10%;
+    right: 10%;
+    min-height: 120px;
+    padding: 16px;
+    background-color: transparent;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.dialog-label {
+    width: 100%;
+    color: rgb(255, 251, 0);
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.4);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    font-size: 24px;
+    white-space: normal;
+}

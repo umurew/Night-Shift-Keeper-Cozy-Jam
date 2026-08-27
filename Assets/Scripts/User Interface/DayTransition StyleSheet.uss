@@ -1,0 +1,35 @@
+.fade-overlay-hidden {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 1);
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    display: none;
+    transition-property: opacity;
+    transition-duration: 0.5s;
+    transition-timing-function: ease-in-out;
+}
+
+.fade-overlay-visible {
+    display: flex;
+    opacity: 1;
+}
+
+.day-text {
+    color: rgb(255, 255, 255);
+    font-size: 64px;
+    -unity-font-style: bold;
+    letter-spacing: 4px;
+}
+
+.objective-text {
+    color: rgb(200, 200, 200);
+    font-size: 24px;
+    -unity-font-style: italic;
+    margin-top: 16px;
+    letter-spacing: 1px;
+}
