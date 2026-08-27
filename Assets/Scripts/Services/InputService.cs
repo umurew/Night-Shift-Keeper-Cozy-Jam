@@ -16,9 +16,6 @@ public class InputService : ServiceBase, IInputService
         _inputActions = new();
         _cameras = new List<CinemachineCamera>(FindObjectsByType<CinemachineCamera>());
 
-        foreach (CinemachineCamera camera in _cameras)
-            Debug.Log($"CAMERA FOUND!!! {camera.name}");
-
         base.Initialize();
     }
 

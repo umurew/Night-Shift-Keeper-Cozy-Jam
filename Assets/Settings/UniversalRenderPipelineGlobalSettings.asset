@@ -80,8 +80,6 @@ MonoBehaviour:
       - rid: 8752747359096274952
       - rid: 8752747359096274953
       - rid: 8752747359096274954
-      - rid: 8752747359096274955
-      - rid: 8752747359096274956
       - rid: 8752747359096274958
       - rid: 8752747359096274960
   m_AssetVersion: 10
@@ -193,7 +191,7 @@ MonoBehaviour:
       type: {class: URPDefaultVolumeProfileSettings, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.Runtime}
       data:
         m_Version: 0
-        m_VolumeProfile: {fileID: 11400000, guid: ab09877e2e707104187f6f83e2f62510, type: 2}
+        m_VolumeProfile: {fileID: 11400000, guid: 21a670d7615d1f74abe887529f849ebf, type: 2}
     - rid: 6852985685364965385
       type: {class: RenderGraphSettings, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.Runtime}
       data:

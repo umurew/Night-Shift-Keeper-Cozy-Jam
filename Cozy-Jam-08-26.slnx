@@ -1,0 +1,8 @@
+﻿<Solution>
+  <Project Path="Assembly.Gameplay.csproj" />
+  <Project Path="RealtimeCSG.csproj" />
+  <Project Path="DOTween.Modules.csproj" />
+  <Project Path="Assembly.Core.csproj" />
+  <Project Path="Assembly.Services.csproj" />
+  <Project Path="Assembly.Runtime.csproj" />
+</Solution>
