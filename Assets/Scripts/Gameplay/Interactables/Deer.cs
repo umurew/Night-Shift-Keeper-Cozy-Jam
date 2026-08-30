@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -46,49 +45,58 @@ public class Deer : MonoBehaviour, IInteractable
     [SerializeField] private float flashlightAngle = 25f;
     [SerializeField] private float fleeDuration = 5f;
 
-    private PlayerNoise _playerNoise;
+    // Component References
     private AudioSource _audioSource;
-    private SceneBlackboard _sceneBlackboard;
     private CharacterController _characterController;
+    private SceneBlackboard _sceneBlackboard;
     private PlayerDialog _playerDialog;
-    private Dictionary<string, int> _animationHashes;
-    private bool _initialized = false;
-    private string _cachedId;
+    private Transform _playerTransform;
 
+    // State Variables
+    private bool _initialized;
+    private string _cachedId;
     private Vector3 _moveDirection = Vector3.zero;
     private Vector3 _verticalVelocity = Vector3.zero;
 
-    private float _targetBlend = 0f;
-    private float _currentBlend = 0f;
-
+    private float _targetBlend;
+    private float _currentBlend;
     private float _stepTimer;
     private int _lastPlayedIndex = -1;
 
     private DeerState _currentState = DeerState.Wandering;
-    private float _currentFear = 0f;
-    private float _fleeTimer = 0f;
-    private Transform _playerTransform;
+    private float _currentFear;
+    private float _fleeTimer;
 
-    private bool _shouldFlee = false;
+    private bool _shouldFlee;
+    private bool _fed;
+
+    // Cached Animator Hashes (Performance optimization over Dictionary)
+    private static readonly int MovingHash = Animator.StringToHash("Moving");
+    private static readonly int BlendHash = Animator.StringToHash("Blend");
 
     public bool Interactable { get; set; }
 
-    public void Initialize(SceneBlackboard sceneBlackboard, PlayerNoise playerNoise, PlayerDialog playerDialog)
+    public void Initialize(SceneBlackboard sceneBlackboard, PlayerDialog playerDialog)
     {
-        _playerNoise = playerNoise;
         _playerDialog = playerDialog;
-        _playerTransform = _playerNoise.transform;
+        _playerTransform = _playerDialog.transform;
         _sceneBlackboard = sceneBlackboard;
         _cachedId = gameObject.name.ToLower();
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_interactable", () =>
-        {
-            Interactable = _sceneBlackboard.Get<bool>($"{_cachedId}_interactable");
-        });
+        // Simplified event subscriptions
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Deer.Interactable, () =>
+            Interactable = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Deer.Interactable));
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_shouldFlee", () =>
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Deer.CanFlee, () =>
+            _shouldFlee = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Deer.CanFlee));
+
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Deer.CanWander, () =>
+            wandering = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Deer.CanWander));
+
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Deer.Fed, () =>
         {
-            _shouldFlee = _sceneBlackboard.Get<bool>($"{_cachedId}_shouldFlee");
+            if (_sceneBlackboard.Get<int>(SceneBlackboardKeys.Deer.Fed) == 0)
+                _fed = false;
         });
 
         StartCoroutine(RoutineRandomizeDirection());
@@ -96,24 +104,23 @@ public class Deer : MonoBehaviour, IInteractable
         Interactable = false;
         _initialized = true;
 
-        Debug.Log($"{GetType().Name} ({_cachedId}) initialized with the following dependencies: Player Noise");
+        Debug.Log($"{GetType().Name} ({_cachedId}) initialized with dependencies: {sceneBlackboard.GetType().Name} | {playerDialog.GetType().Name}");
     }
 
     public void Interact()
     {
-        if (_currentState == DeerState.Fleeing)
+        if (!_initialized || _currentState == DeerState.Fleeing)
             return;
 
-        if (_sceneBlackboard.Get<bool>($"{_cachedId}_fed"))
+        if (_fed)
         {
-            _playerDialog.SetDialog("I already fed this one");
+            _playerDialog.ExecuteDialog("I already fed this one");
             return;
         }
 
-        _sceneBlackboard.Set($"{_cachedId}_fed", true);
-        _sceneBlackboard.Set("deers_fed", _sceneBlackboard.Get<int>("deers_fed") + 1);
-
-        _playerDialog.SetDialog("What a big guy!");
+        _fed = true;
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.Fed, _sceneBlackboard.Get<int>(SceneBlackboardKeys.Deer.Fed) + 1);
+        _playerDialog.ExecuteDialog("What a big guy!");
     }
 
     public void SetInteractPrompt(string text) => interactionPrompt = text;
@@ -127,25 +134,22 @@ public class Deer : MonoBehaviour, IInteractable
         _audioSource = gameObject.AddComponent<AudioSource>();
         _audioSource.playOnAwake = false;
         _audioSource.spatialBlend = 1f;
-
-        _animationHashes = new()
-        {
-            { "Moving", Animator.StringToHash("Moving") },
-            { "Blend", Animator.StringToHash("Blend") }
-        };
     }
+
     private void Update()
     {
         if (!_initialized)
             return;
 
         EvaluatePlayerAwareness();
-
         HandleStateLogic();
 
-        HandleMovementAndAnimation();
+        // Calculate horizontal speed once per frame to share between movement and audio
+        Vector3 horizontalVelocity = new Vector3(_characterController.velocity.x, 0, _characterController.velocity.z);
+        float currentSpeed = horizontalVelocity.magnitude;
 
-        HandleFootsteps();
+        HandleMovementAndAnimation(currentSpeed);
+        HandleFootsteps(currentSpeed);
     }
 
     private void EvaluatePlayerAwareness()
@@ -157,11 +161,12 @@ public class Deer : MonoBehaviour, IInteractable
 
         if (distanceToPlayer <= detectionRadius)
         {
-            float noise = _playerNoise.CurrentNoiseLevel;
+            float noise = _sceneBlackboard.Get<float>(SceneBlackboardKeys.Player.NoiseScore);
             float noiseFear = (noise * noiseFearMultiplier) / Mathf.Max(distanceToPlayer, 1f);
+
             _currentFear += noiseFear * Time.deltaTime;
 
-            if (_playerNoise.IsFlashlightOn)
+            if (_sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Flashlight.IsEnabled))
             {
                 Vector3 directionToDeer = (transform.position - _playerTransform.position).normalized;
                 float angle = Vector3.Angle(_playerTransform.forward, directionToDeer);
@@ -185,28 +190,28 @@ public class Deer : MonoBehaviour, IInteractable
 
     private void HandleStateLogic()
     {
-        if (_currentState == DeerState.Fleeing)
+        if (_currentState != DeerState.Fleeing)
+            return;
+
+        _fleeTimer -= Time.deltaTime;
+
+        if (_playerTransform != null)
         {
-            _fleeTimer -= Time.deltaTime;
+            Vector3 runAwayDir = (transform.position - _playerTransform.position).normalized;
+            _moveDirection = new Vector3(runAwayDir.x, 0f, runAwayDir.z);
+        }
 
-            if (_playerTransform != null)
-            {
-                Vector3 runAwayDir = (transform.position - _playerTransform.position).normalized;
-                _moveDirection = new Vector3(runAwayDir.x, 0f, runAwayDir.z);
-            }
-
-            if (_fleeTimer <= 0f)
-            {
-                _currentState = DeerState.Wandering;
-                _currentFear = 0f;
-                _moveDirection = Vector3.zero;
-            }
+        if (_fleeTimer <= 0f)
+        {
+            _currentState = DeerState.Wandering;
+            _currentFear = 0f;
+            _moveDirection = Vector3.zero;
         }
     }
 
-    private void HandleMovementAndAnimation()
+    private void HandleMovementAndAnimation(float currentSpeed)
     {
-        float currentMoveSpeed = (_currentState == DeerState.Fleeing) ? runSpeed : walkSpeed;
+        float currentMoveSpeed = _currentState == DeerState.Fleeing ? runSpeed : walkSpeed;
 
         if (_characterController.isGrounded && _verticalVelocity.y < 0)
             _verticalVelocity.y = -2f;
@@ -223,23 +228,19 @@ public class Deer : MonoBehaviour, IInteractable
         }
 
         _currentBlend = Mathf.MoveTowards(_currentBlend, _targetBlend, blendDamping * Time.deltaTime);
-        animator.SetFloat(_animationHashes["Blend"], _currentBlend);
+        animator.SetFloat(BlendHash, _currentBlend);
 
-        Vector3 horizontalVelocity = new Vector3(_characterController.velocity.x, 0, _characterController.velocity.z);
-        bool moving = horizontalVelocity.magnitude > minSpeedThreshold;
-        animator.SetBool(_animationHashes["Moving"], moving);
+        animator.SetBool(MovingHash, currentSpeed > minSpeedThreshold);
     }
 
-    private void HandleFootsteps()
+    private void HandleFootsteps(float currentSpeed)
     {
-        Vector3 horizontalVelocity = new(_characterController.velocity.x, 0, _characterController.velocity.z);
-        float currentSpeed = horizontalVelocity.magnitude;
-
         if (_characterController.isGrounded && currentSpeed > minSpeedThreshold)
         {
             float dynamicInterval = stepInterval * (walkSpeed / Mathf.Max(currentSpeed, 0.1f));
 
             _stepTimer += Time.deltaTime;
+
             if (_stepTimer >= dynamicInterval)
             {
                 PlayRandomFootstep();
@@ -247,7 +248,9 @@ public class Deer : MonoBehaviour, IInteractable
             }
         }
         else
+        {
             _stepTimer = stepInterval;
+        }
     }
 
     private void PlayRandomFootstep()
@@ -266,7 +269,9 @@ public class Deer : MonoBehaviour, IInteractable
             while (randomIndex == _lastPlayedIndex);
         }
         else
+        {
             randomIndex = 0;
+        }
 
         _lastPlayedIndex = randomIndex;
 

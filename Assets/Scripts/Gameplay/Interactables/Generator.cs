@@ -7,6 +7,8 @@ public class Generator : MonoBehaviour, IInteractable
 {
     [Header("Configuration")]
     [SerializeField] private string interactionPrompt;
+
+    [Space(10)]
     [SerializeField] private float fadeDuration = 1f;
     [SerializeField] private float targetLightIntensity = 2.0f;
     [SerializeField] private float targetAudioVolume = 0.5f;
@@ -18,8 +20,10 @@ public class Generator : MonoBehaviour, IInteractable
     private SceneBlackboard _sceneBlackboard;
     private AudioSource _audioSource;
     private bool _initialized = false;
+    private bool _isRunning = false;
+
     private readonly List<Light> _lights = new();
-    private Sequence _generatorSeq;
+    private Sequence _generatorSequence;
 
     public bool Interactable { get; set; }
 
@@ -28,9 +32,21 @@ public class Generator : MonoBehaviour, IInteractable
         _sceneBlackboard = sceneBlackboard;
         _audioSource = GetComponent<AudioSource>();
 
-        _sceneBlackboard.ListenTo($"generator_interactable", () =>
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Generator.Interactable, () =>
         {
-            Interactable = _sceneBlackboard.Get<bool>($"generator_interactable");
+            if (Interactable != _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Generator.Interactable))
+                Interactable = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Generator.Interactable);
+        });
+
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Generator.IsRunning, () =>
+        {
+            if (_isRunning != _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Generator.IsRunning))
+                _isRunning = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Generator.IsRunning);
+
+            if (_isRunning)
+                EnableGenerator();
+            else
+                DisableGenerator();
         });
 
         foreach (GameObject lightSource in GameObject.FindGameObjectsWithTag("LanternLight"))
@@ -43,8 +59,7 @@ public class Generator : MonoBehaviour, IInteractable
 
         Interactable = false;
         _initialized = true;
-
-        Debug.Log($"{GetType().Name} initialized with the following dependencies: Scene Blackboard");
+        Debug.Log($"{GetType().Name} initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     public void Interact()
@@ -52,7 +67,7 @@ public class Generator : MonoBehaviour, IInteractable
         if (!_initialized)
             return;
 
-        _sceneBlackboard.Set("generator_running", true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Generator.IsRunning, true);
     }
 
     public string GetInteractPrompt() => interactionPrompt;
@@ -76,36 +91,36 @@ public class Generator : MonoBehaviour, IInteractable
             _audioSource.PlayOneShot(generatorStartingClip);
         }
 
-        _generatorSeq = DOTween.Sequence();
+        _generatorSequence = DOTween.Sequence();
 
-        _generatorSeq.Append(SetLightsIntensity(targetLightIntensity * 0.4f, 0.04f));
-        _generatorSeq.Append(SetLightsIntensity(0.02f, 0.06f));
-        _generatorSeq.Append(SetLightsIntensity(targetLightIntensity * 0.75f, 0.03f));
-        _generatorSeq.Append(SetLightsIntensity(0.08f, 0.10f));
-        _generatorSeq.Append(SetLightsIntensity(targetLightIntensity * 0.3f, 0.02f));
-        _generatorSeq.Append(SetLightsIntensity(0.0f, 0.12f));
-        _generatorSeq.Append(SetLightsIntensity(targetLightIntensity * 1.25f, 0.05f));
-        _generatorSeq.Append(SetLightsIntensity(targetLightIntensity, 0.08f));
+        _generatorSequence.Append(SetLightsIntensity(targetLightIntensity * 0.4f, 0.04f));
+        _generatorSequence.Append(SetLightsIntensity(0.02f, 0.06f));
+        _generatorSequence.Append(SetLightsIntensity(targetLightIntensity * 0.75f, 0.03f));
+        _generatorSequence.Append(SetLightsIntensity(0.08f, 0.10f));
+        _generatorSequence.Append(SetLightsIntensity(targetLightIntensity * 0.3f, 0.02f));
+        _generatorSequence.Append(SetLightsIntensity(0.0f, 0.12f));
+        _generatorSequence.Append(SetLightsIntensity(targetLightIntensity * 1.25f, 0.05f));
+        _generatorSequence.Append(SetLightsIntensity(targetLightIntensity, 0.08f));
 
         if (_audioSource != null)
         {
-            _generatorSeq.Insert(0f, FadeAudioTo(targetAudioVolume * 0.15f, 0.2f));
+            _generatorSequence.Insert(0f, FadeAudioTo(targetAudioVolume * 0.15f, 0.2f));
             float startupDuration = generatorStartingClip != null ? generatorStartingClip.length : 0.37f;
 
-            _generatorSeq.InsertCallback(startupDuration, () =>
+            _generatorSequence.InsertCallback(startupDuration, () =>
             {
                 _audioSource.clip = generatorRunningClip;
                 _audioSource.loop = true;
                 _audioSource.Play();
             });
 
-            _generatorSeq.Insert(startupDuration, FadeAudioTo(targetAudioVolume, 0.15f, Ease.OutQuad));
+            _generatorSequence.Insert(startupDuration, FadeAudioTo(targetAudioVolume, 0.15f, Ease.OutQuad));
         }
     }
 
     public void DisableGenerator(bool instantly = false)
     {
-        _generatorSeq?.Kill();
+        _generatorSequence?.Kill();
 
         foreach (Light light in _lights)
         {
@@ -117,9 +132,7 @@ public class Generator : MonoBehaviour, IInteractable
                 light.enabled = false;
             }
             else
-            {
                 light.DOIntensity(0f, fadeDuration).OnComplete(() => light.enabled = false);
-            }
         }
 
         if (_audioSource != null)
@@ -154,11 +167,7 @@ public class Generator : MonoBehaviour, IInteractable
 
     private Tween FadeAudioTo(float targetVolume, float duration, Ease ease = Ease.Linear)
     {
-        return DOTween.To(
-            () => _audioSource.volume,
-            x => _audioSource.volume = x,
-            targetVolume,
-            duration
-        ).SetEase(ease);
+        return DOTween.To(() => _audioSource.volume, x => _audioSource.volume = x, targetVolume, duration)
+            .SetEase(ease);
     }
 }

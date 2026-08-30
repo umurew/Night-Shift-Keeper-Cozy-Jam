@@ -1,0 +1,19 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/User%20Interface/Objective%20StyleSheet.uss?fileID=7433441132597879392&amp;guid=dab75ed7a4936244b918576068c76d53&amp;type=3#Objective StyleSheet"/>
+    <VisualElement name="objective-container" class="objective-container">
+        <VisualElement class="objective-header">
+            <VisualElement class="square-icon icon-filled-header"/>
+            <Label text="Main objective" class="header-text"/>
+        </VisualElement>
+        <VisualElement name="sub-objective-list" class="sub-objective-list">
+            <VisualElement class="sub-objective-item">
+                <VisualElement class="square-icon icon-outline"/>
+                <Label text="Sub-objective 1" class="sub-text"/>
+            </VisualElement>
+            <VisualElement class="sub-objective-item">
+                <VisualElement class="square-icon icon-outline"/>
+                <Label text="Sub-objective 2" class="sub-text"/>
+            </VisualElement>
+        </VisualElement>
+    </VisualElement>
+</UXML>

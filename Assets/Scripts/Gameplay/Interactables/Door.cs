@@ -20,46 +20,67 @@ public class Door : MonoBehaviour, IInteractable
     [SerializeField] private AudioClip doorOpenClip;
     [SerializeField] private AudioClip DoorCloseClip;
 
-    private Collider _collider;
     private SceneBlackboard _sceneBlackboard;
+
+    private Collider _collider;
     private AudioSource _audioSource;
-    private readonly static WaitForSeconds _debounceDuration = new(0.3f);
-    private Quaternion _closedRotation;
-    private Quaternion _targetRotation;
-    private string _cachedId;
+
     private bool _initialized = false;
     private bool _hasKey = false;
     private bool _isDoorOpened = false;
     private bool _debounce = false;
+
+    private Quaternion _closedRotation;
+    private Quaternion _targetRotation;
+    private readonly static WaitForSeconds _debounceDuration = new(0.3f);
 
     public bool Interactable { get; set; }
 
     public void Initialize(SceneBlackboard sceneBlackboard)
     {
         _sceneBlackboard = sceneBlackboard;
+        _collider = GetComponent<Collider>();
         _audioSource = GetComponent<AudioSource>();
 
         _closedRotation = transform.localRotation;
         _targetRotation = transform.localRotation;
-        _cachedId = id.ToLower();
+        id = id.ToLower();
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_interactable", () =>
+        _sceneBlackboard.ListenTo($"{id}_{SceneBlackboardKeys.Door.Interactable}", () =>
         {
-            Interactable = _sceneBlackboard.Get<bool>($"{_cachedId}_interactable");
+            if (Interactable != _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.Door.Interactable}"))
+                Interactable = _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.Door.Interactable}");
         });
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_locked", () =>
+        _sceneBlackboard.ListenTo($"{id}_{SceneBlackboardKeys.Door.Locked}", () =>
         {
-            locked = _sceneBlackboard.Get<bool>($"{_cachedId}_locked");
+            if (locked != _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.Door.Locked}"))
+                locked = _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.Door.Locked}");
         });
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_hasKey", () =>
+        _sceneBlackboard.ListenTo($"{id}_{SceneBlackboardKeys.Door.HasKey}", () =>
         {
-            _hasKey = _sceneBlackboard.Get<bool>($"{_cachedId}_hasKey");
+            if (_hasKey != _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.Door.HasKey}"))
+                _hasKey = _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.Door.HasKey}");
         });
 
+        _sceneBlackboard.ListenTo($"{id}_{SceneBlackboardKeys.Door.Opened}", () =>
+        {
+            if (_isDoorOpened != _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.Door.Opened}"))
+            {
+                _isDoorOpened = _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.Door.Opened}");
+                float targetAngle = _isDoorOpened ? angle : 0f;
+
+                if (inwards)
+                    targetAngle = -targetAngle;
+
+                _targetRotation = _closedRotation * Quaternion.Euler(0f, targetAngle, 0f);
+            }
+        });
+
+        Interactable = false;
         _initialized = true;
-        Debug.Log($"{GetType().Name} ({_cachedId}) initialized with the following dependencies: Scene Blackboard");
+        Debug.Log($"{GetType().Name} ({id}) initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     public bool IsLocked() => locked;
@@ -89,7 +110,7 @@ public class Door : MonoBehaviour, IInteractable
         if (locked && _hasKey)
         {
             locked = false;
-            _sceneBlackboard.Set($"{_cachedId}_locked", false);
+            _sceneBlackboard.Set($"{id}_{SceneBlackboardKeys.Door.Locked}", false);
 
             _audioSource.PlayOneShot(doorUnlockClip);
 
@@ -104,6 +125,8 @@ public class Door : MonoBehaviour, IInteractable
             _audioSource.PlayOneShot(doorOpenClip);
         else
             _audioSource.PlayOneShot(DoorCloseClip);
+
+        _sceneBlackboard.Set($"{id}_{SceneBlackboardKeys.Door.Opened}", _isDoorOpened);
 
         float targetAngle = _isDoorOpened ? angle : 0f;
 

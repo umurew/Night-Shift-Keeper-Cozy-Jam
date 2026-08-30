@@ -8,16 +8,14 @@ public class TriggerZone : MonoBehaviour
 
     private SceneBlackboard _sceneBlackboard;
     private bool _initialized = false;
-    private string cachedId;
 
     public void Initialize(SceneBlackboard sceneBlackboard)
     {
         _sceneBlackboard = sceneBlackboard;
-        cachedId = zoneId.ToLower();
+        zoneId = zoneId.ToLower();
 
         _initialized = true;
-
-        Debug.Log($"{GetType().Name} ({cachedId}) initialized with the following dependencies: Scene Blackboard");
+        Debug.Log($"{GetType().Name} ({zoneId}) initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     private void OnTriggerEnter(Collider other)
@@ -28,7 +26,8 @@ public class TriggerZone : MonoBehaviour
         if (!other.gameObject.CompareTag("Player"))
             return;
 
-        _sceneBlackboard.Set($"player_in_{cachedId}", true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.LastKnownPosition, zoneId);
+        _sceneBlackboard.Set($"player_in{zoneId[0].ToString().ToUpper()}{zoneId[1..]}", true); // For example sets "player_inOffice"
     }
 
     private void OnTriggerExit(Collider other)
@@ -39,6 +38,6 @@ public class TriggerZone : MonoBehaviour
         if (!other.gameObject.CompareTag("Player"))
             return;
 
-        _sceneBlackboard.Set($"player_in_{cachedId}", false);
+        _sceneBlackboard.Set($"player_in{zoneId[0].ToString().ToUpper()}{zoneId[1..]}", false);
     }
 }

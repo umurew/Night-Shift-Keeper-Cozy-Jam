@@ -18,10 +18,7 @@ public class PlayerRigidbodyCollider : MonoBehaviour
     {
         Rigidbody rigidbody = hit.collider.attachedRigidbody;
 
-        if (rigidbody == null || rigidbody.isKinematic)
-            return;
-
-        if (hit.moveDirection.y < -0.3f)
+        if (rigidbody == null || rigidbody.isKinematic || hit.moveDirection.y < -0.3f)
             return;
 
         Vector3 playerVelocity = _characterController.velocity;

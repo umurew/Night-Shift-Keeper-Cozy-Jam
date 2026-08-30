@@ -1,6 +1,0 @@
-<UXML xmlns="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Scripts/User%20Interface/Dialogue%20StyleSheet.uss?fileID=7433441132597879392&amp;guid=5393088479f01ea429eaf29c2b678492&amp;type=3#Dialogue StyleSheet"/>
-    <VisualElement name="dialog-container" class="dialog-container">
-        <Label name="dialog-label" text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nec ullamcorper arcu, in molestie nibh. Maecenas ut convallis felis, quis." class="dialog-label"/>
-    </VisualElement>
-</UXML>

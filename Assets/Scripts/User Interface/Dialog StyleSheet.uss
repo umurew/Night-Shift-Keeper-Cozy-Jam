@@ -1,0 +1,28 @@
+.dialog-container {
+    position: absolute;
+    bottom: 8%;
+    left: 8%;
+    right: 8%;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dialog-label {
+    white-space: normal;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.125);
+    -unity-text-outline-width: 2px;
+    font-size: 32px;
+    width: 100%;
+    -unity-font-definition: url("project://database/Assets/Fonts/PixeloidSans-Bold.ttf?fileID=12800000&guid=e9e27104f5b09db42ba201a0fcc31f1b&type=3#PixeloidSans-Bold");
+}
+
+.self {
+    color: rgb(255, 255, 0);
+}
+
+.non-self {
+    color: rgb(255, 255, 255);
+}

@@ -1,29 +1,24 @@
-.hud-container {
-	flex-grow: 1;
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	justify-content: center;
-	align-items: center;
-}
-
 .prompt-container {
     position: absolute;
     bottom: 25%;
-	display: flex;
-	flex-direction: column;
+    left: 50%;
+    right: 50%;
+    display: flex;
+    flex-direction: column;
 }
 
 .prompt-header {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 12px;
+    color: rgb(255, 255, 255);
+    font-size: 24px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
+    -unity-font-definition: url("project://database/Assets/Fonts/PixeloidSans.ttf?fileID=12800000&guid=af4cc248e2acb244fbd4033fe3485bb5&type=3#PixeloidSans");
 }
 
 .prompt-label {
-    color: rgb(255, 255, 255);
-    font-size: 22px;
-    -unity-font-style: bold;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
+    -unity-font-style: italic;
     -unity-text-align: middle-center;
+    -unity-font-definition: url("project://database/Assets/Fonts/PixeloidSans.ttf?fileID=12800000&guid=af4cc248e2acb244fbd4033fe3485bb5&type=3#PixeloidSans");
 }

@@ -1,0 +1,72 @@
+VisualElement {
+    padding: 0;
+    margin: 0;
+}
+
+.objective-container {
+    margin: 4%;
+    align-self: flex-start;
+}
+
+.square-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+    align-self: center;
+    flex-shrink: 0;
+    transition-property: opacity;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-in-out;
+}
+
+.icon-filled-header {
+    background-color: rgb(255, 255, 255);
+}
+
+.icon-filled-sub {
+    background-color: rgb(160, 160, 160);
+}
+
+.icon-outline {
+    border-width: 2px;
+    border-color: rgb(160, 160, 160);
+    background-color: transparent;
+}
+
+.objective-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.header-text {
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    font-size: 20px;
+    -unity-font-definition: url("project://database/Assets/Fonts/PixeloidSans-Bold.ttf?fileID=12800000&guid=e9e27104f5b09db42ba201a0fcc31f1b&type=3#PixeloidSans-Bold");
+}
+
+.sub-objective-list {
+    padding-left: 8%;
+}
+
+.sub-objective-item {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.sub-text {
+    color: rgb(160, 160, 160);
+    font-size: 16px;
+    -unity-font-definition: url("project://database/Assets/Fonts/PixeloidSans.ttf?fileID=12800000&guid=af4cc248e2acb244fbd4033fe3485bb5&type=3#PixeloidSans");
+}
+
+.fader-hidden {
+    opacity: 0;
+}
+
+.fader-visible {
+    opacity: 1;
+}

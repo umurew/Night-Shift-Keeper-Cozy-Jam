@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-[RequireComponent(typeof(PlayerNoise))]
 [RequireComponent(typeof(AudioSource))]
 public class PlayerMovement : MonoBehaviour
 {
@@ -15,19 +14,13 @@ public class PlayerMovement : MonoBehaviour
 
     [Space(10)]
     [SerializeField] private float walkSpeed = 3f;
-
-    [Space(5)]
-    [SerializeField] private bool sprintEnabled = false;
+    [SerializeField] private bool canSprint = false;
+    [SerializeField] private bool canCrouch = false;
+    [SerializeField] private bool canJump = false;
     [SerializeField] private float sprintSpeed = 5f;
-
-    [Space(5)]
-    [SerializeField] private bool crouchEnabled = false;
     [SerializeField] private float crouchSpeed = 1f;
-
-    [Space(5)]
-    [SerializeField] private bool jumpEnabled = false;
     [SerializeField] private float jumpHeight = 1f;
-    
+
     [Space(10)]
     [SerializeField] private float stepInterval = 0.45f;
     [SerializeField] private float minPitch = 0.9f;
@@ -35,34 +28,30 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float minSpeedThreshold = 0.2f;
     [Range(0f, 1f)][SerializeField] private float volume = 0.5f;
 
-    private bool _initialized = false;
     private IInputService _inputService;
-    private AudioSource _audioSource;
-    private PlayerNoise _playerNoise;
-    private CharacterController _characterController;
+    private SceneBlackboard _sceneBlackboard;
     private Transform _cameraTransform;
-    private Dictionary<string, int> _animationHashes;
+
+    private AudioSource _audioSource;
+    private CharacterController _characterController;
+
+    private bool _initialized = false;
     private float _verticalVelocity = 0f;
     private bool _crouching = false;
+
     private float _stepTimer;
     private int _lastPlayedIndex = -1;
 
-    public void Initialize(IInputService inputService, Transform cameraTransform)
+    private Dictionary<string, int> _animationHashes;
+
+    public void Initialize(IInputService inputService, SceneBlackboard sceneBlackboard, Transform cameraTransform)
     {
         _inputService = inputService;
+        _sceneBlackboard = sceneBlackboard;
         _cameraTransform = cameraTransform;
+
         _audioSource = GetComponent<AudioSource>();
-
-        _inputService.SetCursorState(true);
-        _initialized = true;
-
-        Debug.Log($"{GetType().Name} initialized with the following dependencies: Input Service | Sound Service | Camera Transform");
-    }
-
-    private void Awake()
-    {
         _characterController = GetComponent<CharacterController>();
-        _playerNoise = GetComponent<PlayerNoise>();
 
         _animationHashes = new()
         {
@@ -72,6 +61,24 @@ public class PlayerMovement : MonoBehaviour
             { "IsGrounded", Animator.StringToHash("IsGrounded") },
             { "Crouching", Animator.StringToHash("Crouching") }
         };
+
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Player.CanSprint, () =>
+        {
+            canSprint = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.CanSprint);
+        });
+
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Player.CanCrouch, () =>
+        {
+            canCrouch = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.CanCrouch);
+        });
+
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Player.CanJump, () =>
+        {
+            canJump = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.CanJump);
+        });
+
+        _initialized = true;
+        Debug.Log($"{GetType().Name} initialized with the following dependencies: {inputService.GetType().Name} | {cameraTransform.GetType().Name} | {sceneBlackboard.GetType().Name}");
     }
 
     private void Update()
@@ -105,7 +112,7 @@ public class PlayerMovement : MonoBehaviour
                 _verticalVelocity = -2f;
 
             // Handle crouching
-            if (crouchEnabled && _inputService.PlayerActions.Crouch.IsInProgress())
+            if (canCrouch && _inputService.PlayerActions.Crouch.IsInProgress())
             {
                 _crouching = true;
 
@@ -120,7 +127,8 @@ public class PlayerMovement : MonoBehaviour
                 _characterController.height = 1.85f;
             }
 
-            if (jumpEnabled && _inputService.PlayerActions.Jump.WasPressedThisFrame())
+            // Handle jumping
+            if (canJump && _inputService.PlayerActions.Jump.WasPressedThisFrame())
             {
                 _crouching = false;
                 _verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
@@ -132,7 +140,7 @@ public class PlayerMovement : MonoBehaviour
             _verticalVelocity += gravity * Time.deltaTime;
 
         // Handle sprinting
-        bool sprinting = sprintEnabled && _inputService.PlayerActions.Sprint.IsInProgress();
+        bool sprinting = canSprint && _inputService.PlayerActions.Sprint.IsInProgress();
 
         float horizontalSpeed = true switch
         {
@@ -150,10 +158,16 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleFootsteps(bool sprinting, bool crouching)
     {
-        Vector3 horizontalVelocity = new Vector3(_characterController.velocity.x, 0, _characterController.velocity.z);
+        Vector3 horizontalVelocity = new(_characterController.velocity.x, 0, _characterController.velocity.z);
         float currentSpeed = horizontalVelocity.magnitude;
 
-        _playerNoise.UpdateNoiseLevel(currentSpeed, _characterController.isGrounded);
+        if (!_characterController.isGrounded || currentSpeed < 0.1f)
+        {
+            _sceneBlackboard.Set(SceneBlackboardKeys.Player.NoiseScore, 0f);
+            return;
+        }
+
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.NoiseScore, currentSpeed);
 
         if (_characterController.isGrounded && currentSpeed > minSpeedThreshold)
         {
@@ -212,7 +226,6 @@ public class PlayerMovement : MonoBehaviour
         animator.SetBool(_animationHashes["Crouching"], crouching);
 
         int crouchLayerIndex = animator.GetLayerIndex("Crouch Layer");
-
         if (crouchLayerIndex == -1)
         {
             Debug.LogWarning($"Crouch layer was not found.");

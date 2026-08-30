@@ -13,8 +13,8 @@ public class SceneBlackboard : ScriptableObject
 
     public void Set(string key, object value)
     {
-        if (_stateDictionary.TryGetValue(key, out object oldValue) && Equals(oldValue, value))
-            return;
+        //if (_stateDictionary.TryGetValue(key, out object oldValue) && Equals(oldValue, value))
+        //    return;
 
         _stateDictionary[key] = value;
         OnStateChanged?.Invoke(key, value);

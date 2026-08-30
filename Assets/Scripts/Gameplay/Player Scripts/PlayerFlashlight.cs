@@ -7,7 +7,7 @@ public class PlayerFlashlight : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Animator animator;
-    [SerializeField] private GameObject flashlight;
+    [SerializeField] private AudioSource audioSource;
     [SerializeField] private ParentConstraint parentConstraint;
 
     [Space(10)]
@@ -15,30 +15,30 @@ public class PlayerFlashlight : MonoBehaviour
     [SerializeField] private AudioClip flashlightClick;
 
     private IInputService _inputService;
-    private AudioSource _audioSource;
-    private Dictionary<string, int> _animationHashes;
+    private SceneBlackboard _sceneBlackboard;
+    private PlayerDialog _playerDialog;
+
     private bool _initialized = false;
     private bool _flashlightEquipped = false;
     private bool _debounce = false;
+
+    private Dictionary<string, int> _animationHashes;
     private static readonly WaitForSeconds cooldown = new(0.25f);
     private static readonly WaitForSeconds actionDelay = new(0.25f);
 
-    public void Initialize(IInputService inputService)
+    public void Initialize(IInputService inputService, SceneBlackboard sceneBlackboard, PlayerDialog playerDialog)
     {
         _inputService = inputService;
-        _audioSource = flashlight.GetComponent<AudioSource>();
+        _sceneBlackboard = sceneBlackboard;
+        _playerDialog = playerDialog;
 
-        _initialized = true;
-
-        Debug.Log($"{GetType().Name} initialized with the following dependencies: Input Service | Sound Service");
-    }
-
-    private void Awake()
-    {
         _animationHashes = new()
         {
             { "FlashlightEquipped", Animator.StringToHash("FlashlightEquipped") },
         };
+
+        _initialized = true;
+        Debug.Log($"{GetType().Name} initialized with the following dependencies: {inputService.GetType().Name} | {sceneBlackboard.GetType().Name} | {playerDialog.GetType().Name}");
     }
 
     private void Update()
@@ -48,16 +48,22 @@ public class PlayerFlashlight : MonoBehaviour
 
         if (!_debounce && _inputService.PlayerActions.ToggleFlashlight.WasPressedThisFrame())
         {
+            if (_sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Mop.IsEquipped))
+            {
+                _playerDialog.ExecuteDialog("I should put the mop away first.");
+                return;
+            }
+
             _debounce = true;
 
             _flashlightEquipped = !_flashlightEquipped;
-
             if (_flashlightEquipped)
                 StartCoroutine(EquipFlashlight());
             else
                 StartCoroutine(UnequipFlashlight());
 
             animator.SetBool(_animationHashes["FlashlightEquipped"], _flashlightEquipped);
+            _sceneBlackboard.Set(SceneBlackboardKeys.Player.Flashlight.IsEquipped, _flashlightEquipped);
         }
         
         UpdateLayerWeight();
@@ -96,7 +102,7 @@ public class PlayerFlashlight : MonoBehaviour
 
     private IEnumerator UnequipFlashlight()
     {
-        _audioSource.PlayOneShot(flashlightClick);
+        audioSource.PlayOneShot(flashlightClick);
         flashlightLight.enabled = false;
 
         yield return actionDelay;
@@ -113,7 +119,7 @@ public class PlayerFlashlight : MonoBehaviour
         SetSourceWeight(0, 1);
         SetSourceWeight(1, 0);
 
-        _audioSource.PlayOneShot(flashlightClick);
+        audioSource.PlayOneShot(flashlightClick);
         flashlightLight.enabled = true;
 
         yield return cooldown;

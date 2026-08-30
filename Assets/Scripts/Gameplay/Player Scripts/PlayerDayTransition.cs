@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,25 +9,26 @@ public class PlayerDayTransition : MonoBehaviour
 
     [Header("Configuration")]
     [SerializeField] private float fadeDuration = 0.5f;
-    [SerializeField] private float darkHoldDuration = 0.3f;
+    [SerializeField] private float overlayDuration = 0.3f;
 
     private SceneBlackboard _sceneBlackboard;
-    private VisualElement _fadeOverlay;
-    private Label _dayLabel;
-    private Label _objectiveLabel;
+
+    private VisualElement _overlayElement;
+    private Label _headerLabel;
+    private Label _subLabel;
+
     private bool _initialized = false;
 
     public void Initialize(SceneBlackboard sceneBlackboard)
     {
         _sceneBlackboard = sceneBlackboard;
 
-        var root = dayTransitionDocument.rootVisualElement;
-        _fadeOverlay = root.Q<VisualElement>("fade-overlay");
-        _dayLabel = root.Q<Label>("day-label");
-        _objectiveLabel = root.Q<Label>("objective-label");
+        VisualElement rootVisualElement = dayTransitionDocument.rootVisualElement;
+        _overlayElement = rootVisualElement.Q<VisualElement>("overlay");
+        _headerLabel = rootVisualElement.Q<Label>("header-label");
+        _subLabel = rootVisualElement.Q<Label>("sub-label");
 
         _initialized = true;
-
         Debug.Log($"{GetType().Name} initialized.");
     }
 
@@ -37,27 +37,26 @@ public class PlayerDayTransition : MonoBehaviour
         if (!_initialized)
             return;
 
-        await ExecuteDayTransitionAsync(_sceneBlackboard.Get<int>("day"), _sceneBlackboard.Get<string>("objective"), action);
+        await ExecuteDayTransitionAsync(_sceneBlackboard.Get<int>(SceneBlackboardKeys.Scene.Day), _sceneBlackboard.Get<string>(SceneBlackboardKeys.Scene.DayDescription), action);
     }
 
-    private async Awaitable ExecuteDayTransitionAsync(int day, string objective, Action action)
+    private async Awaitable ExecuteDayTransitionAsync(int day, string dayDescription, Action action)
     {
-        _fadeOverlay.style.display = DisplayStyle.Flex;
-        await Awaitable.NextFrameAsync();
+        _overlayElement.style.display = DisplayStyle.Flex;
 
-        _dayLabel.text = $"DAY {day}";
-        _objectiveLabel.text = objective;
+        _headerLabel.text = $"DAY {day}";
+        _subLabel.text = dayDescription;
 
-        _fadeOverlay.AddToClassList("fade-overlay-visible");
+        _overlayElement.AddToClassList("overlay-visible");
         await Awaitable.WaitForSecondsAsync(0.5f);
 
         action();
 
-        await Awaitable.WaitForSecondsAsync(fadeDuration + darkHoldDuration);
+        await Awaitable.WaitForSecondsAsync(fadeDuration + overlayDuration);
 
-        _fadeOverlay.RemoveFromClassList("fade-overlay-visible");
+        _overlayElement.RemoveFromClassList("overlay-visible");
         await Awaitable.WaitForSecondsAsync(fadeDuration);
 
-        _fadeOverlay.style.display = DisplayStyle.None;
+        _overlayElement.style.display = DisplayStyle.None;
     }
 }

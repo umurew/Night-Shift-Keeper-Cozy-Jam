@@ -216,6 +216,6 @@ MonoBehaviour:
   interactionPrompt: Generator
   fadeDuration: 1
   targetLightIntensity: 2
-  targetAudioVolume: 1
+  targetAudioVolume: 0.1
   generatorStartingClip: {fileID: 8300000, guid: 65e75965a64d5a9449823047885615fb, type: 3}
   generatorRunningClip: {fileID: 8300000, guid: 448398adfdfd17548b6a8e6dcc5df6d6, type: 3}

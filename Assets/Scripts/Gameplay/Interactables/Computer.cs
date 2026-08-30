@@ -7,7 +7,6 @@ public class Computer : MonoBehaviour, IInteractable
 
     private SceneBlackboard _sceneBlackboard;
     private bool _initialized = false;
-    private readonly string _cachedId = "computer";
 
     public bool Interactable { get; set; }
 
@@ -15,20 +14,15 @@ public class Computer : MonoBehaviour, IInteractable
     {
         _sceneBlackboard = sceneBlackboard;
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_interactable", () =>
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Computer.Interactable, () =>
         {
-            Interactable = _sceneBlackboard.Get<bool>($"{_cachedId}_interactable");
-        });
-
-        _sceneBlackboard.ListenTo($"{_cachedId}_interactionprompt", () =>
-        {
-            SetInteractPrompt(_sceneBlackboard.Get<string>($"{_cachedId}_interactionprompt"));
+            if (Interactable != _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Computer.Interactable))
+                Interactable = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Computer.Interactable);
         });
 
         Interactable = false;
         _initialized = true;
-
-        Debug.Log($"{GetType().Name} initialized.");
+        Debug.Log($"{GetType().Name} initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     public void Interact()
@@ -36,7 +30,7 @@ public class Computer : MonoBehaviour, IInteractable
         if (!_initialized)
             return;
 
-        _sceneBlackboard.Set($"{_cachedId}_interacted", true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Computer.Interacted, true);
     }
 
     public string GetInteractPrompt() => interactionPrompt;

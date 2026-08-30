@@ -8,16 +8,19 @@ public class LightSwitch : MonoBehaviour, IInteractable
     [Header("Configuration")]
     [SerializeField] private string id;
     [SerializeField] private string interactionPrompt;
+
+    [Space(10)]
     [SerializeField] private Light connectedLight;
+
+    [Space(10)]
     [SerializeField] private AudioClip lightSwitchToggleAudioClip;
 
     private SceneBlackboard _sceneBlackboard;
     private AudioSource _audioSource;
-    private WaitForSeconds _debounceDuration = new(0.125f);
-    private string _cachedId;
+    private bool _initialized = false;
     private bool _debounce = false;
     private bool _switchEnabled = false;
-    private bool _initialized = false;
+    private readonly WaitForSeconds _debounceDuration = new(0.125f);
 
     public bool Interactable { get; set; }
 
@@ -25,22 +28,23 @@ public class LightSwitch : MonoBehaviour, IInteractable
     {
         _sceneBlackboard = sceneBlackboard;
         _audioSource = GetComponent<AudioSource>();
-        _cachedId = id.ToLower();
+        id = id.ToLower();
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_interactable", () =>
+        _sceneBlackboard.ListenTo($"{id}_{SceneBlackboardKeys.LightSwitch.Interactable}", () =>
         {
-            Interactable = _sceneBlackboard.Get<bool>($"{_cachedId}_interactable");
+            if (Interactable != _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.LightSwitch.Interactable}"))
+                Interactable = _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.LightSwitch.Interactable}");
         });
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_enabled", () =>
+        _sceneBlackboard.ListenTo($"{id}_{SceneBlackboardKeys.LightSwitch.Enabled}", () =>
         {
-            connectedLight.enabled = _sceneBlackboard.Get<bool>($"{_cachedId}_enabled");
+            if (connectedLight.enabled != _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.LightSwitch.Enabled}"))
+                connectedLight.enabled = _sceneBlackboard.Get<bool>($"{id}_{SceneBlackboardKeys.LightSwitch.Enabled}");
         });
 
         Interactable = false;
         _initialized = true;
-
-        Debug.Log($"{GetType().Name} ({_cachedId}) initialized with the following dependencies: Scene Blackboard");
+        Debug.Log($"{GetType().Name} ({id}) initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     public void Interact()
@@ -59,7 +63,7 @@ public class LightSwitch : MonoBehaviour, IInteractable
         else
             connectedLight.enabled = false;
 
-        _sceneBlackboard.Set($"{_cachedId}_enabled", _switchEnabled);
+        _sceneBlackboard.Set($"{id}_{SceneBlackboardKeys.LightSwitch.Enabled}", _switchEnabled);
     }
 
     public string GetInteractPrompt() => interactionPrompt;

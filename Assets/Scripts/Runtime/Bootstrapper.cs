@@ -8,12 +8,13 @@ using UnityEngine.UIElements;
 public class Bootstrapper : MonoBehaviour
 {
     [Header("Scene References")]
-    [SerializeField] private ObjectDataRegistry objectDataRegistry;
+    // [SerializeField] private ObjectDataRegistry objectDataRegistry;
     [SerializeField] private SceneBlackboard sceneBlackboard;
     [SerializeField] private Camera mainCamera;
     [SerializeField] private GameObject staticGeometry;
     [SerializeField] private GameObject dynamicGeometry;
     [SerializeField] private GameObject instances;
+
     [Space(10)]
     [SerializeField] private GameObject officeSpawnpoint;
     [SerializeField] private GameObject parkingLotSpawnpoint;
@@ -29,151 +30,464 @@ public class Bootstrapper : MonoBehaviour
 
     [Header("Prefab References")]
     [SerializeField] private InputService inputServicePrefab;
+    [SerializeField] private AudioSource ambiencePlayer;
 
     private InputService _inputService;
+    private SceneBlackboard _sceneBlackboard;
+    private AudioSource _ambiencePlayer;
+    private AudioSource _playerAudioSource;
+    private PlayerMovement _playerMovement;
+    private PlayerInteraction _playerInteraction;
+    private PlayerDayTransition _playerDayTransition;
+    private PlayerDialog _playerDialog;
+    private PlayerFlashlight _playerFlashlight;
+    private PlayerObjective _playerObjective;
+    private Generator _generator;
+    private Computer _computer;
+    private Phone _phone;
+    private Mop _mop;
 
     private async void Awake()
     {
+        Debug.Log($"{GetType().Name} initializing systems.");
+        InitializeSystems();
+
+        Debug.Log($"{GetType().Name} initializing scene and behaviours.");
+        InitializeSceneAndBehaviours();
+
+        Debug.Log($"{GetType().Name} executing day one.");
+        await ExecuteDayOne();
+
+        Debug.Log($"{GetType().Name} executing day two.");
+        await ExecuteDayTwo();
+
+        Debug.Log($"{GetType().Name} executing day three.");
+        await ExecuteDayThree();
+    }
+
+    private void InitializeSystems()
+    {
+        // Initialize services and data components
+
+        // Disabled the ObjectDataRegistry since it is not usefull
+        // objectDataRegistry = Instantiate(objectDataRegistry);
+        // objectDataRegistry.Initialize();
+
+        _sceneBlackboard = ScriptableObject.CreateInstance<SceneBlackboard>();
+        _sceneBlackboard.ResetStates();
+
         _inputService = Instantiate(inputServicePrefab, transform);
         _inputService.Initialize();
-
-        objectDataRegistry = Instantiate(objectDataRegistry);
-        objectDataRegistry.Initialize();
-
-        sceneBlackboard = Instantiate(sceneBlackboard);
-        sceneBlackboard.ResetStates();
-
-        AudioSource playerAudioSource = player.GetComponent<AudioSource>();
-
-        PlayerMovement playerMovement = player.GetComponent<PlayerMovement>();
-        playerMovement.Initialize(_inputService, mainCamera.transform);
-
-        PlayerInteraction playerInteraction = player.GetComponent<PlayerInteraction>();
-        playerInteraction.Initialize(_inputService, mainCamera.transform);
-
-        PlayerFlashlight playerFlashlight = player.GetComponent<PlayerFlashlight>();
-        playerFlashlight.Initialize(_inputService);
-
-        PlayerNoise playerNoise = player.GetComponent<PlayerNoise>();
-
-        PlayerDayTransition playerDayTransition = player.GetComponent<PlayerDayTransition>();
-        playerDayTransition.Initialize(sceneBlackboard);
-
-        PlayerDialog playerDialog = player.GetComponent<PlayerDialog>();
-        playerDialog.Initialize(sceneBlackboard);
-
-        foreach (Deer deer in FindObjectsByType<Deer>())
-            deer.Initialize(sceneBlackboard, playerNoise, playerDialog);
-
-        foreach (Door door in FindObjectsByType<Door>())
-            door.Initialize(sceneBlackboard);
-
-        foreach (LightSwitch lightSwitch in FindObjectsByType<LightSwitch>())
-            lightSwitch.Initialize(sceneBlackboard);
-
-        Generator generator = FindObjectsByType<Generator>().FirstOrDefault();
-        generator.Initialize(sceneBlackboard);
-
-        Computer computer = FindObjectsByType<Computer>().FirstOrDefault();
-        computer.Initialize(sceneBlackboard);
-
-        Phone phone = FindObjectsByType<Phone>().FirstOrDefault();
-        phone.Initialize(sceneBlackboard);
-
-        foreach (TriggerZone zone in FindObjectsByType<TriggerZone>())
-            zone.Initialize(sceneBlackboard);
-
-        generator.DisableGenerator();
-
-        DOTween.SetTweensCapacity(500, 50);
-
-        sceneBlackboard.Set("day", 1);
-        sceneBlackboard.Set("objective", "First day at the work");
-
-        sceneBlackboard.Set("office_door_interactable", true);
-        sceneBlackboard.Set("office_door_hasKey", true);
-
-        await playerDayTransition.ExecuteAsync(() => MovePlayerToSpawnpoint(parkingLotSpawnpoint));
-
         _inputService.EnablePlayerControls();
 
-        await playerDialog.SetDialogAsync("I should check in.", 3);
-        sceneBlackboard.Set("main_objective", "Check-in");
+        _ambiencePlayer = Instantiate(ambiencePlayer, transform);
+        _ambiencePlayer.Play();
+    }
 
-        await sceneBlackboard.WaitUntilKeyMatches("player_in_office", true);
+    private void InitializeSceneAndBehaviours()
+    {
+        // Initialize behaviours
+        _playerAudioSource = player.GetComponent<AudioSource>();
 
-        await playerDialog.SetDialogAsync("Light switch doesn't seem to work...");
-        await playerDialog.SetDialogAsync("I think I should turn on the Generator.");
-        sceneBlackboard.Set("generator_interactable", true);
-        sceneBlackboard.Set("main_objective", "Restore power.");
+        _playerMovement = player.GetComponent<PlayerMovement>();
+        _playerMovement.Initialize(_inputService, _sceneBlackboard, mainCamera.transform);
 
-        await sceneBlackboard.WaitUntilKeyMatches("generator_running", true);
-        sceneBlackboard.Set("generator_interactable", false);
-        sceneBlackboard.Set("office_lightswitch_interactable", true);
-        generator.EnableGenerator();
+        _playerInteraction = player.GetComponent<PlayerInteraction>();
+        _playerInteraction.Initialize(_inputService, _sceneBlackboard, mainCamera.transform);
 
-        await playerDialog.SetDialogAsync("It's definitely better now...");
+        _playerDayTransition = player.GetComponent<PlayerDayTransition>();
+        _playerDayTransition.Initialize(_sceneBlackboard);
 
-        await playerDialog.SetDialogAsync("Okay, now I should check in.\nBoss is going to be mad at me,");
-        await playerDialog.SetDialogAsync("I can't stand him.");
+        _playerDialog = player.GetComponent<PlayerDialog>();
+        _playerDialog.Initialize();
 
-        await sceneBlackboard.WaitUntilKeyMatches("player_in_office", true);
+        _playerFlashlight = player.GetComponent<PlayerFlashlight>();
+        _playerFlashlight.Initialize(_inputService, _sceneBlackboard, _playerDialog);
+
+        _playerObjective = player.GetComponent<PlayerObjective>();
+        _playerObjective.Initialize(_sceneBlackboard);
+
+        // Initialize components which are in the scene
+
+        // Initialize deer in the scene
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.DeerCount, 0);
+        foreach (Deer deer in FindObjectsByType<Deer>())
+        {
+            deer.Initialize(_sceneBlackboard, _playerDialog);
+            _sceneBlackboard.Set(SceneBlackboardKeys.Scene.DeerCount, _sceneBlackboard.Get<int>(SceneBlackboardKeys.Scene.DeerCount) + 1);
+        }
+
+        // Initialize wolves in the scene
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.WolfCount, 0);
+        foreach (Wolf wolf in FindObjectsByType<Wolf>())
+        {
+            wolf.Initialize(_sceneBlackboard, _playerDialog);
+            _sceneBlackboard.Set(SceneBlackboardKeys.Scene.WolfCount, _sceneBlackboard.Get<int>(SceneBlackboardKeys.Scene.WolfCount) + 1);
+        }
+
+        // Initialize doors in the scene
+        foreach (Door door in FindObjectsByType<Door>())
+            door.Initialize(_sceneBlackboard);
+
+        // Initialize light switches in the scene
+        foreach (LightSwitch lightSwitch in FindObjectsByType<LightSwitch>())
+            lightSwitch.Initialize(_sceneBlackboard);
+
+        // Initialize moppable objects in the scene
+        foreach (Moppable moppable in FindObjectsByType<Moppable>())
+            moppable.Initialize(_sceneBlackboard, _playerDialog);
+
+        // Initialize zones
+        foreach (TriggerZone zone in FindObjectsByType<TriggerZone>())
+            zone.Initialize(_sceneBlackboard);
+
+        // Initialize barriers
+        foreach (Barrier barrier in FindObjectsByType<Barrier>())
+            barrier.Initialize(_sceneBlackboard);
+
+        // Initialize the Generator
+        _generator = FindObjectsByType<Generator>().FirstOrDefault();
+        _generator.Initialize(_sceneBlackboard);
+        _generator.DisableGenerator();
+
+        // Initialize the Computer
+        _computer = FindObjectsByType<Computer>().FirstOrDefault();
+        _computer.Initialize(_sceneBlackboard);
+
+        // Initialize the Phone
+        _phone = FindObjectsByType<Phone>().FirstOrDefault();
+        _phone.Initialize(_sceneBlackboard);
+
+        // Initialize the Mop
+        _mop = FindObjectsByType<Mop>().FirstOrDefault();
+        _mop.Initialize(_sceneBlackboard, _playerDialog);
+
+        DOTween.SetTweensCapacity(500, 50);
+    }
+
+    private async Task ExecuteDayOne()
+    {
+        // Advance to the first day
+        ResetBlackboardStates();
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Day, 1);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.DayDescription, "First day at work");
+
+        InitializeSceneAndBehaviours();
+
+        await _playerDayTransition.ExecuteAsync(() =>
+        {
+            // Move the player to the spawnpoint
+            MovePlayerToSpawnpoint(parkingLotSpawnpoint);
+
+            // Allow player to interact with interactables
+            _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanInteract, true);
+
+            // Allow player to interact with the door
+            // Give the Office key to the player since the door is locked
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.Interactable}", true);
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.HasKey}", true);
+
+            // Hide wolves
+            foreach (Wolf wolf in FindObjectsByType<Wolf>())
+                wolf.enabled = false;
+        });
+
+        // Play self-dialog
+        await _playerDialog.ExecuteDialogAsync("I should check-in.", 3);
+
+        // [Main Objective] Check-In
+        SetMainObjective("Check-In");
+
+        // Wait until player arrives to the Office
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Player.InOffice, true);
+
+        // Play self-dialogs
+        await _playerDialog.ExecuteDialogAsync("Light switch doesn't seem to work...");
+        await _playerDialog.ExecuteDialogAsync("I think I should turn on the Generator.", 3f);
+
+        // [Sub Objective] Restore power
+        SetSubObjective("Restore power.");
+
+        // Make the Generator interactable
+        _sceneBlackboard.Set(SceneBlackboardKeys.Generator.Interactable, true);
+
+        // Wait until player turns on the Generator
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Generator.IsRunning, true);
+
+        // Make the Generator non-interactable & the Office light switch interactable
+        _sceneBlackboard.Set(SceneBlackboardKeys.Generator.Interactable, false);
+        _sceneBlackboard.Set($"office_{SceneBlackboardKeys.LightSwitch.Interactable}", true);
+
+        // Enable the Generator
+        _generator.EnableGenerator();
+        CompleteSubObjective();
+
+        // Play self-dialogs
+        await _playerDialog.ExecuteDialogAsync("It's definitely better...");
+        await _playerDialog.ExecuteDialogAsync("Okay, I can check-in now.");
+
+        // Wait until player gets back in the Office
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Player.InOffice, true);
+
+        // [Sub Objective] Turn on the lights
+        SetSubObjective("Turn on the lights.");
+
+        // Play self-dialog if lights are off
+        if (!_sceneBlackboard.Get<bool>($"office_{SceneBlackboardKeys.LightSwitch.Enabled}"))
+            await _playerDialog.ExecuteDialogAsync("It's dark...");
         
-        if (!sceneBlackboard.Get<bool>("office_lightswitch_enabled"))
-            await playerDialog.SetDialogAsync("It's dark...");
+        // Wait until lights are on
+        await _sceneBlackboard.WaitUntilKeyMatches($"office_{SceneBlackboardKeys.LightSwitch.Enabled}", true);
+        CompleteSubObjective();
 
-        await sceneBlackboard.WaitUntilKeyMatches("office_lightswitch_enabled", true);
+        // Make the Computer interactable so player could check-in
+        _sceneBlackboard.Set(SceneBlackboardKeys.Computer.Interactable, true);
 
-        sceneBlackboard.Set("computer_interactable", true);
-        sceneBlackboard.Set("computer_interactionprompt", "Check-In");
-        await sceneBlackboard.WaitUntilKeyMatches("computer_interacted", true);
+        // Wait until player checks-in
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Computer.Interacted, true);
 
-        sceneBlackboard.Set("computer_interactable", false);
+        // Reset the Computer
+        _sceneBlackboard.Set(SceneBlackboardKeys.Computer.Interacted, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Computer.Interactable, false);
 
-        await playerDialog.SetDialogAsync("Okay, it looks fine now.");
-        sceneBlackboard.Set("phone_incoming", true);
-        sceneBlackboard.Set("phone_interactable", true);
-        sceneBlackboard.Set("phone_interactionprompt", "Respond");
+        // Play self-dialog
+        await _playerDialog.ExecuteDialogAsync("Here comes my first shift...");
+        CompleteMainObjective();
 
-        await sceneBlackboard.WaitUntilKeyMatches("phone_interacted", true);
+        // Ring the phone and make it interactable
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Ringing, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interactable, true);
 
-        sceneBlackboard.Set("phone_interactable", false);
+        // Wait until player picks up the phone
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Phone.Interacted, true);
 
-        sceneBlackboard.Set("phone_interactable", false);
-        sceneBlackboard.Set("phone_interactionprompt", "...");
+        // Reset the Phone
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interacted, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interactable, false);
 
-        sceneBlackboard.Set("phone_speak", Time.time);
-        await playerDialog.SetDialogAsync("You're already late on your very first day...");
-        sceneBlackboard.Set("phone_speak", Time.time);
-        await playerDialog.SetDialogAsync("...so stop loitering and go check on and feed the deer already!");
+        // Play dialog
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Speaking, Time.time);
+        await _playerDialog.ExecuteDialogAsync("You're already late on your very first day...", 3f, false);
 
-        playerAudioSource.PlayOneShot(sighClip);
+        // Play Dialog
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Speaking, Time.time);
+        await _playerDialog.ExecuteDialogAsync("...so stop loitering and go check on and feed the deer already!", 3f, false);
+
+        // Play sighing sound
+        _playerAudioSource.PlayOneShot(sighClip, 1);
+        await Task.Delay(2500);
+
+        // Allow player to sprint & crouch
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanSprint, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanCrouch, true);
+
+        // [Main Objective] Check and feed the deer
+        SetMainObjective("Check and feed the deer.");
+
+        // Setup deer
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.CanFlee, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.Interactable, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.Fed, 0);
+
+        // Play self-dialogs
+        await _playerDialog.ExecuteDialogAsync("He could fire me. At my first day?");
+        await _playerDialog.ExecuteDialogAsync("I would definitely not like that!");
+
+        // Breathe delay
         await Task.Delay(2000);
 
-        sceneBlackboard.Set("main_objective", "Check and feed the deer.");
-        sceneBlackboard.Set("deer1_shouldFlee", true);
-        sceneBlackboard.Set("deer1_interactable", true);
+        // Allow access to the Square
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Barriers.SquareEntrance.IsActive, false);
 
-        await playerDialog.SetDialogAsync("I should better do as he says.\nOtherwise he would fire me.");
-        await playerDialog.SetDialogAsync("At my first day? I would definitely not like that.");
+        // Introduce new movement mechanics
+        await _playerDialog.ExecuteDialogAsync("Hold Left Shift \t Sprint\nHold Left Control/C \t Crouch", 3f, false);
 
-        sceneBlackboard.Set("deers_fed", 0);
-        await sceneBlackboard.WaitUntilKeyMatches("deers_fed", 1);
+        // Wait until player feeds all the existing deer
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Deer.Fed, _sceneBlackboard.Get<int>(SceneBlackboardKeys.Scene.DeerCount));
 
-        await playerDialog.SetDialogAsync("I am done with the deers.");
-        await playerDialog.SetDialogAsync("I should return to the office.");
+        // Play self-dialog
+        await _playerDialog.ExecuteDialogAsync("We are done with the deer.");
+        CompleteMainObjective();
 
-        sceneBlackboard.Set("main_objective", "Return to the office.");
-        await sceneBlackboard.WaitUntilKeyMatches("player_in_office", true);
+        // Delay to prevent objective removing next one
+        await Task.Delay(3000);
 
-        await playerDialog.SetDialogAsync("It's going to be a long night", 1);
+        // [Main Objective] Clean the mess. (At the entrance of the Square)
+        SetMainObjective("Clean the mess. (At the entrance of the Square)");
 
-        sceneBlackboard.Set("day", 2);
-        sceneBlackboard.Set("objective", "DEMO END");
+        // Play self-dialogs
+        await _playerDialog.ExecuteDialogAsync("I think I saw a graffiti at the entrance of the square,\nI should clean it.", 3f);
+        await _playerDialog.ExecuteDialogAsync("Earlier Boss said that there was a mop in the office.");
 
-        await playerDayTransition.ExecuteAsync(() => MovePlayerToSpawnpoint(officeSpawnpoint));
+        // [Sub Objective] Get the mop from the Office
+        SetSubObjective("Get the mop from the Office.");
 
-        Application.Quit();
+        // Make the mop and the mess interactable
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.Mop.Interactable, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Decals.Sprint.Interactable, true);
+
+        // Wait until the player actually equips the mop
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Player.Mop.IsEquipped, true);
+        CompleteSubObjective();
+
+        // Wait until the player cleans the mess
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Scene.Decals.Sprint.Removed, true);
+        CompleteMainObjective();
+
+        await _playerDialog.ExecuteDialogAsync("It smells like blood though?");
+        await _playerDialog.ExecuteDialogAsync("Whatever.");
+
+        // [Main Objective] Return to the office
+        SetMainObjective("Return to the office.");
+
+        // [Sub Objective] Put the mop back
+        SetSubObjective("Put the mop back.");
+
+        // Play self-dialog
+        await _playerDialog.ExecuteDialogAsync("I should return to the office.");
+
+        // Wait until the player gets in the Office and puts the mop back
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Player.InOffice, true);
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Player.Mop.IsEquipped, false);
+        CompleteSubObjective();
+        CompleteMainObjective();
+
+        // Breathe delay
+        await Task.Delay(2000);
+    }
+
+    private async Task ExecuteDayTwo()
+    {
+        // Advence to the second day
+        ResetBlackboardStates();
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Day, 2);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.DayDescription, "Welcome the wolves");
+
+        InitializeSceneAndBehaviours();
+
+        await _playerDayTransition.ExecuteAsync(() =>
+        {
+            // Move player to the spawnpoint
+            MovePlayerToSpawnpoint(officeSpawnpoint);
+
+            // Allow player to play with the light switch
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.LightSwitch.Enabled}", true);
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.LightSwitch.Interactable}", true);
+        });
+
+        // Breathe delay
+        await Task.Delay(2000);
+
+        // Play self-dialog
+        await _playerDialog.ExecuteDialogAsync("It's my second shift.");
+        await _playerDialog.ExecuteDialogAsync("I should get used to this.");
+
+        // Phone dialog between the player and the Boss
+
+        // Reset the phone
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interacted, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interactable, false);
+
+        // Enable and ring the phone
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Ringing, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interactable, true);
+
+        // Wait until player picks up the phone
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Phone.Interacted, true);
+
+        // Play dialog
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Speaking, Time.time);
+        await _playerDialog.ExecuteDialogAsync("Hey! How is it going? Whatever..", 3f, false);
+
+        // Play dialog
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Speaking, Time.time);
+        await _playerDialog.ExecuteDialogAsync("I don't really care...", 3f, false);
+
+        // Play self-dialog
+        await _playerDialog.ExecuteDialogAsync("Wow. He really said that.");
+        await _playerDialog.ExecuteDialogAsync("...");
+
+        // Play dialog
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Speaking, Time.time);
+        await _playerDialog.ExecuteDialogAsync("Listen to me.", 1f, false);
+
+        // Play dialog
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Speaking, Time.time);
+        await _playerDialog.ExecuteDialogAsync("Our crew has brought some wolves.\nYou better take care of them.", 4f, false);
+
+        // [Main Objective] Feed the animals
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Objectives.MainObjective, "Feed the animals.");
+
+        // [Sub Objective] Feed deer
+        SetSubObjective("Feed deer.");
+
+        // Enable the door so player could get out
+        _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.Interactable}", true);
+
+        // Reset deer
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.CanFlee, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.Interactable, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.Fed, 0);
+
+        // Wait for player to feed deer
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Deer.Fed, _sceneBlackboard.Get<int>(SceneBlackboardKeys.Scene.DeerCount));
+        CompleteSubObjective();
+
+        // Reset deer
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.CanFlee, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.Interactable, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.Fed, 0);
+
+        // [Sub Objective] Feed the wolves
+        await _playerDialog.ExecuteDialogAsync("Now I could look after the wolves.");
+        SetSubObjective("Feed the wolves.");
+
+        // Reset wolves
+        _sceneBlackboard.Set(SceneBlackboardKeys.Wolf.CanFlee, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Wolf.Interactable, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Wolf.Fed, 0);
+
+        // Enable wolves
+        foreach (Wolf wolf in FindObjectsByType<Wolf>())
+            wolf.enabled = true;
+
+        // Wait for player to feed all the wolves
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Wolf.Fed, _sceneBlackboard.Get<int>(SceneBlackboardKeys.Scene.WolfCount));
+        CompleteSubObjective();
+
+        // [Sub Objective] Go to the Office
+        await _playerDialog.ExecuteDialogAsync("Yay! I will call it a day now.");
+        SetSubObjective("Go to the office.");
+
+        // Wait for player to get in the Office
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Player.InOffice, true);
+
+        // Complete the objectives
+        CompleteSubObjective();
+        CompleteMainObjective();
+
+        await Task.Delay(1000);
+    }
+
+    private async Task ExecuteDayThree()
+    {
+        // Advance to the third day
+        ResetBlackboardStates();
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Day, 3);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.DayDescription, "Things got strange?");
+
+        InitializeSceneAndBehaviours();
+
+        await _playerDayTransition.ExecuteAsync(() =>
+        {
+            MovePlayerToSpawnpoint(officeSpawnpoint);
+
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.Opened}", false);
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.Interactable}", false);
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.LightSwitch.Enabled}", true);
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.LightSwitch.Interactable}", false);
+            _sceneBlackboard.Set(SceneBlackboardKeys.Player.Mop.Interactable, false);
+        });
     }
 
     private void MovePlayerToSpawnpoint(GameObject spawnpoint)
@@ -188,7 +502,7 @@ public class Bootstrapper : MonoBehaviour
             return;
 
         cinemachineInputAxisController.enabled = false;
-        player.transform.rotation = parkingLotSpawnpoint.transform.rotation;
+        player.transform.rotation = spawnpoint.transform.rotation;
 
         cinemachineInputAxisController.enabled = true;
         _inputService.EnablePlayerControls();
@@ -200,7 +514,7 @@ public class Bootstrapper : MonoBehaviour
 
         if (!mainCamera.TryGetComponent<CinemachineBrain>(out CinemachineBrain cinemachineBrain))
         {
-            Debug.LogError($"{GetType().Name} encountered an error: CinemachineBrain component was null for MainCamera");
+            Debug.LogError($"{GetType().Name} encountered an error: CinemachineBrain component was null for {mainCamera.GetType().Name}");
             return false;
         }
 
@@ -209,5 +523,52 @@ public class Bootstrapper : MonoBehaviour
 
         cinemachineCamera = (CinemachineCamera)cinemachineBrain.ActiveVirtualCamera;
         return true;
+    }
+
+    private void SetMainObjective(string objective) => _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Objectives.MainObjective, objective);
+
+    private void SetSubObjective(string objective)
+    {
+        int currentCount = _sceneBlackboard.Get<int>(SceneBlackboardKeys.Scene.Objectives.ObjectiveCount);
+        int nextSubObjectiveIndex = currentCount;
+
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Objectives.ObjectiveCount, currentCount + 1);
+
+        string objectiveString = $"{nextSubObjectiveIndex}{objective}";
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Objectives.SubObjective, objectiveString);
+    }
+
+    private void CompleteSubObjective()
+    {
+        string currentSubObjective = _sceneBlackboard.Get<string>(SceneBlackboardKeys.Scene.Objectives.SubObjective);
+        _sceneBlackboard.Set($"{SceneBlackboardKeys.Scene.Objectives.SubObjective}{SceneBlackboardKeys.Suffix.Completed}", currentSubObjective);
+    }
+
+    private void CompleteMainObjective()
+    {
+        string currentMainObjective = _sceneBlackboard.Get<string>(SceneBlackboardKeys.Scene.Objectives.MainObjective);
+        _sceneBlackboard.Set($"{SceneBlackboardKeys.Scene.Objectives.MainObjective}{SceneBlackboardKeys.Suffix.Completed}", currentMainObjective);
+    }
+
+    private void ResetBlackboardStates()
+    {
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanCrouch, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanJump, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanSprint, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanInteract, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.Flashlight.CanEquip, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.Flashlight.IsEquipped, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.Mop.Interactable, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.Mop.IsEquipped, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Day, 0);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.DayDescription, string.Empty);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Generator.Interactable, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Computer.Interactable, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Computer.Interacted, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interactable, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interacted, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.LightSwitch.Interactable, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.LightSwitch.Enabled, false);
+        _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.Opened}", false);
     }
 }

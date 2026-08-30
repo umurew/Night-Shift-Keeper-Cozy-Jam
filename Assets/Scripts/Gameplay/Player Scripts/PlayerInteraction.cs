@@ -5,57 +5,59 @@ using UnityEngine.UIElements;
 public class PlayerInteraction : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private UIDocument uiDocument;
+    [SerializeField] private UIDocument promptDocument;
 
     [Header("Configuration")]
+    [SerializeField] private bool canInteract = false;
+
+    [Space(10)]
     [SerializeField] private float raycastDistance = 3.5f;
     [SerializeField] private float raycastRadius = 0.02f;
     [SerializeField] private LayerMask raycastLayerMask;
-    [SerializeField] private string containerName = "PromptContainer";
-    [SerializeField] private string headerName = "PromptHeader";
-    [SerializeField] private string labelName = "PromptLabel";
 
     private IInputService _inputService;
+    private SceneBlackboard _sceneBlackboard;
     private Transform _cameraTransform;
+
     private bool _initialized = false;
+
     private IInteractable _currentInteractable;
     private RaycastHit _currentHit;
+
     private VisualElement _promptContainer;
     private Label _promptHeaderLabel;
-    private Label _promptLabel;
+    private Label _promptSubLabel;
 
-    public void Initialize(IInputService inputService, Transform cameraTransform)
+    public void Initialize(IInputService inputService, SceneBlackboard sceneBlackboard, Transform cameraTransform)
     {
         _inputService = inputService;
+        _sceneBlackboard = sceneBlackboard;
         _cameraTransform = cameraTransform;
 
-        if (uiDocument == null || uiDocument.rootVisualElement == null)
-        {
-            Debug.LogWarning($"UIDocument is missing or not initialized on {GetType().Name}.");
-            return;
-        }
+        VisualElement rootVisualElement = promptDocument.rootVisualElement;
+        _promptContainer = rootVisualElement.Q<VisualElement>("prompt-container");
+        _promptHeaderLabel = rootVisualElement.Q<Label>("prompt-header-label");
+        _promptSubLabel = rootVisualElement.Q<Label>("prompt-sub-label");
 
-        var root = uiDocument.rootVisualElement;
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Player.CanInteract, OnCanInteractChanged);
 
-        _promptContainer = root.Q<VisualElement>(containerName);
-        _promptHeaderLabel = root.Q<Label>(headerName);
-        _promptLabel = root.Q<Label>(labelName);
-
-        if (_promptContainer == null || _promptHeaderLabel == null || _promptLabel == null)
-        {
-            Debug.LogWarning($"{GetType().Name} failed to initialize: UI elements were missing.");
-            return;
-        }
-
-        HidePrompt();
+        HideInterface();
 
         _initialized = true;
-        Debug.Log($"{GetType().Name} initialized with the following dependencies: Input Service | Camera Transform");
+        Debug.Log($"{GetType().Name} initialized with the following dependencies: {inputService.GetType().Name} | {cameraTransform.GetType().Name} | {sceneBlackboard.GetType().Name}");
+    }
+
+    private void OnCanInteractChanged()
+    {
+        canInteract = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.CanInteract);
+
+        if (!canInteract)
+            ClearInteraction();
     }
 
     private void Update()
     {
-        if (!_initialized)
+        if (!_initialized || !canInteract)
             return;
 
         PerformInteractionCheck();
@@ -63,7 +65,7 @@ public class PlayerInteraction : MonoBehaviour
         if (_currentInteractable != null && _inputService.PlayerActions.Interact.WasPressedThisFrame())
         {
             _currentInteractable.Interact();
-            UpdatePrompt();
+            ShowInterface();
         }
     }
 
@@ -76,50 +78,44 @@ public class PlayerInteraction : MonoBehaviour
             _currentHit = raycastHit;
             IInteractable interactable = raycastHit.collider.GetComponent<IInteractable>();
 
-            if (interactable != null && interactable.Interactable == true)
+            if (interactable != null && interactable.Interactable)
             {
-                if (interactable == _currentInteractable && interactable.GetInteractPrompt() == _promptLabel.text)
+                if (interactable == _currentInteractable && interactable.GetInteractPrompt() == _promptHeaderLabel.text)
                     return;
 
                 _currentInteractable = interactable;
-                ShowPrompt();
-
+                ShowInterface();
                 return;
             }
         }
 
-        if (_currentInteractable != null)
+        ClearInteraction();
+    }
+
+    private void ClearInteraction()
+    {
+        if (_currentInteractable != null || _promptContainer.style.visibility == Visibility.Visible)
         {
             _currentInteractable = null;
-            HidePrompt();
+            HideInterface();
         }
     }
 
-    private void ShowPrompt()
-    {
-        if (_currentInteractable == null || _promptContainer == null || _promptHeaderLabel == null || _promptLabel == null)
-        {
-            Debug.LogError("One or more of the visual elements or variable \"_currentInteractable\" was null.");
-            return;
-        }
+    private void HideInterface() => _promptContainer.style.visibility = Visibility.Hidden;
 
-        UpdatePrompt();
-        _promptContainer.style.visibility = Visibility.Visible;
-    }
-
-    private void HidePrompt()
-    {
-        if (_promptContainer != null)
-            _promptContainer.style.visibility = Visibility.Hidden;
-    }
-
-    private void UpdatePrompt()
+    private void ShowInterface()
     {
         if (_currentInteractable == null)
             return;
 
-        _promptLabel.text = _currentInteractable.GetInteractPrompt();
-        _promptHeaderLabel.text = $"{_inputService.PlayerActions.Interact.GetBindingDisplayString(0)} to Interact";
+        _promptContainer.style.visibility = Visibility.Visible;
+        _promptHeaderLabel.text = _currentInteractable.GetInteractPrompt();
+
+        string bindingDisplay = _inputService.PlayerActions.Interact.GetBindingDisplayString(InputBinding.MaskByGroup("Keyboard&Mouse"))
+            .Replace("Hold ", "")
+            .Trim();
+
+        _promptSubLabel.text = $"Press {bindingDisplay} to Interact";
     }
 
     private void OnDrawGizmosSelected()

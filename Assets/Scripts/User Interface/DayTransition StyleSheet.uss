@@ -1,10 +1,10 @@
-.fade-overlay-hidden {
+.overlay-hidden {
     position: absolute;
     left: 0;
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 1);
+    background-color: rgb(0, 0, 0);
     justify-content: center;
     align-items: center;
     opacity: 0;
@@ -14,22 +14,24 @@
     transition-timing-function: ease-in-out;
 }
 
-.fade-overlay-visible {
+.overlay-visible {
     display: flex;
     opacity: 1;
 }
 
-.day-text {
+.header-text {
     color: rgb(255, 255, 255);
     font-size: 64px;
     -unity-font-style: bold;
     letter-spacing: 4px;
+    -unity-font-definition: url("project://database/Assets/Fonts/PixeloidSans.ttf?fileID=12800000&guid=af4cc248e2acb244fbd4033fe3485bb5&type=3#PixeloidSans");
 }
 
-.objective-text {
+.sub-text {
     color: rgb(200, 200, 200);
     font-size: 24px;
     -unity-font-style: italic;
     margin-top: 16px;
     letter-spacing: 1px;
+    -unity-font-definition: url("project://database/Assets/Fonts/PixeloidSans.ttf?fileID=12800000&guid=af4cc248e2acb244fbd4033fe3485bb5&type=3#PixeloidSans");
 }

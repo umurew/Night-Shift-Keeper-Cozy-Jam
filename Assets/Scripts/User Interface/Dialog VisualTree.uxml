@@ -1,0 +1,7 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/User%20Interface/Dialogue%20StyleSheet.uss?fileID=7433441132597879392&amp;guid=5393088479f01ea429eaf29c2b678492&amp;type=3#Dialogue StyleSheet"/>
+    <VisualElement name="dialog-container" class="dialog-container">
+        <Label name="dialog-label" text="This is the first dialog, I am your boss!!!" class="dialog-label non-self"/>
+        <Label name="dialog-label" text="OMG! I must do my work! I am myself!!!" class="dialog-label self"/>
+    </VisualElement>
+</UXML>

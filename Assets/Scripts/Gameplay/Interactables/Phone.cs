@@ -13,8 +13,7 @@ public class Phone : MonoBehaviour, IInteractable
     private SceneBlackboard _sceneBlackboard;
     private AudioSource _audioSource;
     private bool _initialized = false;
-    private readonly string _cachedId = "phone";
-    private bool _incoming = false;
+    private bool _ringing = false;
 
     public bool Interactable { get; set; }
 
@@ -23,21 +22,18 @@ public class Phone : MonoBehaviour, IInteractable
         _sceneBlackboard = sceneBlackboard;
         _audioSource = GetComponent<AudioSource>();
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_interactable", () =>
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Phone.Interactable, () =>
         {
-            Interactable = _sceneBlackboard.Get<bool>($"{_cachedId}_interactable");
+            if (Interactable != _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Phone.Interactable))
+                Interactable = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Phone.Interactable);
         });
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_interactionprompt", () =>
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Phone.Ringing, () =>
         {
-            SetInteractPrompt(_sceneBlackboard.Get<string>($"{_cachedId}_interactionprompt"));
-        });
+            if (_ringing != _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Phone.Ringing))
+                _ringing = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Phone.Ringing);
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_incoming", () =>
-        {
-            _incoming = _sceneBlackboard.Get<bool>($"{_cachedId}_incoming");
-
-            if (_incoming)
+            if (_ringing)
             {
                 _audioSource.clip = incomingClip;
                 _audioSource.loop = true;
@@ -47,24 +43,23 @@ public class Phone : MonoBehaviour, IInteractable
                 _audioSource.Stop();
         });
 
-        _sceneBlackboard.ListenTo($"{_cachedId}_speak", () =>
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Phone.Speaking, () =>
         {
             _audioSource.PlayOneShot(speakClip);
         });
 
         Interactable = false;
         _initialized = true;
-
-        Debug.Log($"{GetType().Name} initialized.");
+        Debug.Log($"{GetType().Name} initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     public void Interact()
     {
-        if (!_initialized && !_incoming)
+        if (!_initialized && !_ringing)
             return;
 
-        _sceneBlackboard.Set($"{_cachedId}_incoming", false);
-        _sceneBlackboard.Set($"{_cachedId}_interacted", true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Ringing, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interacted, true);
     }
 
     public string GetInteractPrompt() => interactionPrompt;

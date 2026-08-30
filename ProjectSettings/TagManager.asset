@@ -6,6 +6,7 @@ TagManager:
   tags:
   - LanternLight
   - Zone
+  - Waypoint
   layers:
   - Default
   - TransparentFX
@@ -19,11 +20,11 @@ TagManager:
   - 
   - Player
   - Zone
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Deer
+  - Wolf
+  - Fox
+  - Squirrel
+  - Bird
   - 
   - 
   - 
