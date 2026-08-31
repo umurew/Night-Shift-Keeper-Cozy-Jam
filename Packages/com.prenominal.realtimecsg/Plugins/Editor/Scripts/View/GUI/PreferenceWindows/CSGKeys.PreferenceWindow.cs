@@ -96,16 +96,16 @@ namespace RealtimeCSG
 		static void DoKeyEventField(Rect position, int index, ref KeyCodeWithModifier key, GUIStyle style)
 		{
 			int id = GUIUtility.GetControlID(s_KeyEventFieldHash + index, FocusType.Passive, position);
-			Event evt = Event.current;
-			switch (evt.GetTypeForControl(id))
+			Event e = Event.current;
+			switch (e.GetTypeForControl(id))
 			{
 				case EventType.MouseDown:
 				{
 					// If the mouse is inside the button, we say that we're the hot control
-					if (position.Contains(evt.mousePosition))
+					if (position.Contains(e.mousePosition))
 					{
 						GUIUtility.hotControl = id;
-						evt.Use();
+						e.Use();
 						if (bKeyEventActive == id)
 							// cancel
 						{
@@ -126,7 +126,7 @@ namespace RealtimeCSG
 
 						// If we got the mousedown, the mouseup is ours as well
 						// (no matter if the click was in the button or not)
-						evt.Use();
+						e.Use();
 					}
 					return;
 				}
@@ -134,7 +134,7 @@ namespace RealtimeCSG
 				{
 					if (GUIUtility.hotControl == id)
 					{
-						evt.Use();
+						e.Use();
 					}
 					break;
 				}
@@ -155,29 +155,29 @@ namespace RealtimeCSG
 					if ((GUIUtility.hotControl == id) && bKeyEventActive == id)
 					{
 						// ignore presses of just modifier keys
-						if (evt.character == '\0')
+						if (e.character == '\0')
 						{
-							if (evt.alt &&
-							    (evt.keyCode == KeyCode.AltGr || evt.keyCode == KeyCode.LeftAlt || evt.keyCode == KeyCode.RightAlt) ||
-							    evt.control && (evt.keyCode == KeyCode.LeftControl || evt.keyCode == KeyCode.RightControl) ||
-							    evt.command &&
-							    (evt.keyCode == KeyCode.LeftApple || evt.keyCode == KeyCode.RightApple || evt.keyCode == KeyCode.LeftWindows ||
-							     evt.keyCode == KeyCode.RightWindows) ||
-							    evt.shift &&
-							    (evt.keyCode == KeyCode.LeftShift || evt.keyCode == KeyCode.RightShift || (int) evt.keyCode == 0))
+							if (e.alt &&
+							    (e.keyCode == KeyCode.AltGr || e.keyCode == KeyCode.LeftAlt || e.keyCode == KeyCode.RightAlt) ||
+							    e.control && (e.keyCode == KeyCode.LeftControl || e.keyCode == KeyCode.RightControl) ||
+							    e.command &&
+							    (e.keyCode == KeyCode.LeftApple || e.keyCode == KeyCode.RightApple || e.keyCode == KeyCode.LeftWindows ||
+							     e.keyCode == KeyCode.RightWindows) ||
+							    e.shift &&
+							    (e.keyCode == KeyCode.LeftShift || e.keyCode == KeyCode.RightShift || (int) e.keyCode == 0))
 							{
 								return;
 							}
 						}
 						bKeyEventActive = -1;
 						GUI.changed = true;
-						key.keyCode = evt.keyCode;
-						key.modifiers = (evt.command ? EventModifiers.Command : 0)
-									  | (evt.alt     ? EventModifiers.Alt : 0)
-									  | (evt.shift   ? EventModifiers.Shift : 0)
-									  | (evt.control ? EventModifiers.Control : 0);
+						key.keyCode = e.keyCode;
+						key.modifiers = (e.command ? EventModifiers.Command : 0)
+									  | (e.alt     ? EventModifiers.Alt : 0)
+									  | (e.shift   ? EventModifiers.Shift : 0)
+									  | (e.control ? EventModifiers.Control : 0);
 						GUIUtility.hotControl = 0;
-						evt.Use();
+						e.Use();
 						return;
 					}
 					break;

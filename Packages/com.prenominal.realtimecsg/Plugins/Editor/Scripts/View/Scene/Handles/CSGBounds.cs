@@ -35,8 +35,8 @@ namespace RealtimeCSG.Helpers
 
 			UpdateColors(camera, bounds, worldToLocalRotation, showEdgePoints);
 
-			var evt = Event.current;
-			switch (evt.type)
+			var e = Event.current;
+			switch (e.type)
 			{
 				case EventType.Repaint:
 				{

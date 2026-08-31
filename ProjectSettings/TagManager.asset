@@ -7,6 +7,7 @@ TagManager:
   - LanternLight
   - Zone
   - Waypoint
+  - Car
   layers:
   - Default
   - TransparentFX
@@ -17,7 +18,7 @@ TagManager:
   - 
   - 
   - 
-  - 
+  - Creature
   - Player
   - Zone
   - Deer

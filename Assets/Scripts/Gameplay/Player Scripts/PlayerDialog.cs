@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -37,11 +37,11 @@ public class PlayerDialog : MonoBehaviour
 
         _dialogContainer.Add(dialogLabel);
 
-        await Task.Delay(Mathf.FloorToInt(duration * 1000));
+        await UniTask.Delay(Mathf.FloorToInt(duration * 1000));
         dialogLabel.RemoveFromHierarchy();
     }
 
-    public async Task ExecuteDialogAsync(string text, float duration = 2f, bool self = true)
+    public async UniTask ExecuteDialogAsync(string text, float duration = 2f, bool self = true)
     {
         if (!_initialized)
             return;
@@ -56,7 +56,7 @@ public class PlayerDialog : MonoBehaviour
 
         _dialogContainer.Add(dialogLabel);
 
-        await Task.Delay(Mathf.FloorToInt(duration * 1000));
+        await UniTask.Delay(Mathf.FloorToInt(duration * 1000));
         dialogLabel.RemoveFromHierarchy();
     }
 }

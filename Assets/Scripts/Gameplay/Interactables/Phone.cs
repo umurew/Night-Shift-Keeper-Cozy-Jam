@@ -50,7 +50,7 @@ public class Phone : MonoBehaviour, IInteractable
 
         Interactable = false;
         _initialized = true;
-        Debug.Log($"{GetType().Name} initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
+        Debug.Log($"{GetType().Name} initialized with dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     public void Interact()

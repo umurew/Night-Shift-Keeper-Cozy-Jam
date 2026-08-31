@@ -15,7 +15,7 @@ public class TriggerZone : MonoBehaviour
         zoneId = zoneId.ToLower();
 
         _initialized = true;
-        Debug.Log($"{GetType().Name} ({zoneId}) initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
+        Debug.Log($"{GetType().Name} ({zoneId}) initialized with dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     private void OnTriggerEnter(Collider other)

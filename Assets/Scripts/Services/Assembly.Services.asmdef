@@ -2,8 +2,8 @@
     "name": "Assembly.Services",
     "rootNamespace": "",
     "references": [
-        "GUID:a68fc8f33c6146f4eb4055b078154459",
-        "GUID:4307f53044263cf4b835bd812fc161a4"
+        "GUID:4307f53044263cf4b835bd812fc161a4",
+        "GUID:a68fc8f33c6146f4eb4055b078154459"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

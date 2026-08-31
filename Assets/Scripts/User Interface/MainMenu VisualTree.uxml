@@ -1,0 +1,44 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/User%20Interface/MainMenu%20StyleSheet.uss?fileID=7433441132597879392&amp;guid=f733dae6531f66349aa17edf269bf35f&amp;type=3#MainMenu StyleSheet"/>
+    
+    <VisualElement name="root" class="main-root">
+        
+        <VisualElement name="title-container" class="title-container">
+            <Label name="new-badge" class="new-badge" text="NEW!!!"/>
+            <Label name="title-night" class="title-label" text="NIGHT SHIFT"/>
+            <Label name="title-keeper" class="title-label" text="KEEPER"/>
+        </VisualElement>
+        
+        <VisualElement name="menu-container" class="menu-container">
+            <Button name="play-button" class="menu-button" text="PLAY"/>
+            <Button name="settings-button" class="menu-button" text="SETTINGS"/>
+            <Button name="quit-button" class="menu-button" text="QUIT"/>
+        </VisualElement>
+        
+    </VisualElement>
+    
+    <VisualElement name="settings-container" class="settings-container hidden">
+        <Label name="settings-title" class="title-label settings-title" text="SETTINGS" />
+        
+        <VisualElement name="settings-options" style="width: 450px; margin-top: 40px; margin-bottom: 40px;">
+            <VisualElement class="setting-row">
+                <Label text="RESOLUTION" class="setting-label" />
+                <DropdownField name="resolution-dropdown" class="setting-control" />
+            </VisualElement>
+
+            <VisualElement class="setting-row">
+                <Label text="VOLUME" class="setting-label" />
+                <Slider name="volume-slider" class="setting-control" low-value="0" high-value="1" />
+            </VisualElement>
+            
+            <VisualElement class="setting-row">
+                <Label text="FULLSCREEN" class="setting-label" />
+                <Toggle name="fullscreen-toggle" class="setting-control" />
+            </VisualElement>
+        </VisualElement>
+        
+        <Button name="settings-back-button" class="menu-button settings-back-button" text="BACK"/>
+    </VisualElement>
+    
+    <VisualElement name="fade-overlay" class="fade-overlay fade-overlay-visible" />
+</UXML>

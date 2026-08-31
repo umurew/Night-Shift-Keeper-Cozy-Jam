@@ -14,8 +14,8 @@ namespace RealtimeCSG.Helpers
             var worldPosition	= Handles.matrix.MultiplyPoint(position);
 			var origMatrix		= Handles.matrix;
 			
-			var evt = Event.current;
-			switch (evt.GetTypeForControl(id))
+			var e = Event.current;
+			switch (e.GetTypeForControl(id))
 			{
 				case EventType.Layout:
 				{
@@ -26,17 +26,17 @@ namespace RealtimeCSG.Helpers
 				}
 				case EventType.MouseDown:
 				{
-					if ((HandleUtility.nearestControl == id && evt.button == 0) || 
-						(GUIUtility.keyboardControl == id && evt.button == 2))
+					if ((HandleUtility.nearestControl == id && e.button == 0) || 
+						(GUIUtility.keyboardControl == id && e.button == 2))
 					{
 						GUIUtility.hotControl = GUIUtility.keyboardControl = id;
-						s_CurrentMousePosition = s_StartMousePosition = evt.mousePosition;
+						s_CurrentMousePosition = s_StartMousePosition = e.mousePosition;
 						s_StartPosition = position;
 						if (snapVertices != null)
 							s_SnapVertices = snapVertices;
 						else
 							s_SnapVertices = new Vector3[] { s_StartPosition };
-						evt.Use();
+						e.Use();
 						EditorGUIUtility.SetWantsMouseJumping(1);
 					}
 					break;
@@ -45,7 +45,7 @@ namespace RealtimeCSG.Helpers
 				{
 					if (GUIUtility.hotControl == id)
 					{
-						s_CurrentMousePosition += new Vector2(evt.delta.x, -evt.delta.y);
+						s_CurrentMousePosition += new Vector2(e.delta.x, -e.delta.y);
 						var screenPos = camera.WorldToScreenPoint(Handles.matrix.MultiplyPoint(s_StartPosition));
 						screenPos += (Vector3)(s_CurrentMousePosition - s_StartMousePosition);
 						position = Handles.inverseMatrix.MultiplyPoint(camera.ScreenToWorldPoint(screenPos));
@@ -55,16 +55,16 @@ namespace RealtimeCSG.Helpers
 						else
 							position = RealtimeCSG.CSGGrid.HandleLockedAxi(position - s_StartPosition) + s_StartPosition;
 						GUI.changed = true;
-						evt.Use();
+						e.Use();
 					}
 					break;
 				}
 				case EventType.MouseUp:
 				{
-					if (GUIUtility.hotControl == id && (evt.button == 0 || evt.button == 2))
+					if (GUIUtility.hotControl == id && (e.button == 0 || e.button == 2))
 					{
 						GUIUtility.hotControl = 0;
-						evt.Use();
+						e.Use();
 						EditorGUIUtility.SetWantsMouseJumping(0);
 					}
 					break;

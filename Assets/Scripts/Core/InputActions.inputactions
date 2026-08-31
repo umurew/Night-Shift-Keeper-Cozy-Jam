@@ -95,6 +95,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Toggle Shotgun",
+                    "type": "Button",
+                    "id": "37227132-555a-446e-af72-a5e51ede0c2e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -502,6 +511,17 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "Toggle Flashlight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "0d78ffee-380b-4148-bb0e-514af0f88ec4",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Toggle Shotgun",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

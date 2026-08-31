@@ -12,8 +12,8 @@ namespace RealtimeCSG.Helpers
 
 		internal static Vector3 Do(Camera camera, int id, Vector3 position, Vector3 direction, float size, CSGHandles.CapFunction capFunction, SnapMode snapMode, Vector3[] snapVertices, CSGHandles.InitFunction initFunction = null, CSGHandles.InitFunction shutdownFunction = null)
 		{
-			var evt = Event.current;
-			switch (evt.GetTypeForControl(id))
+			var e = Event.current;
+			switch (e.GetTypeForControl(id))
 			{
 				case EventType.Layout:
 				{
@@ -27,16 +27,16 @@ namespace RealtimeCSG.Helpers
 				{
 					if (CSGHandles.disabled)
 						break;
-					if (((HandleUtility.nearestControl == id && evt.button == 0) || 
-						 (GUIUtility.keyboardControl == id && evt.button == 2)) && GUIUtility.hotControl == 0)
+					if (((HandleUtility.nearestControl == id && e.button == 0) || 
+						 (GUIUtility.keyboardControl == id && e.button == 2)) && GUIUtility.hotControl == 0)
 					{
 						s_SnapVertices = null;
 						if (initFunction != null)
 							initFunction();
 						GUIUtility.hotControl = GUIUtility.keyboardControl = id;
-						s_CurrentMousePosition = s_StartMousePosition = evt.mousePosition;
+						s_CurrentMousePosition = s_StartMousePosition = e.mousePosition;
 						s_StartPosition = position;
-						evt.Use();
+						e.Use();
 						EditorGUIUtility.SetWantsMouseJumping(1);
 					}
 
@@ -53,7 +53,7 @@ namespace RealtimeCSG.Helpers
 							else
 								s_SnapVertices = new Vector3[] { s_StartPosition };
 						}
-						s_CurrentMousePosition += evt.delta;
+						s_CurrentMousePosition += e.delta;
 						var dist			= HandleUtility.CalcLineTranslation(s_StartMousePosition, s_CurrentMousePosition, s_StartPosition, direction);
 						var worldDirection	= Handles.matrix.MultiplyVector(direction);
 						var worldPosition	= Handles.matrix.MultiplyPoint(s_StartPosition) + (worldDirection * dist);
@@ -82,18 +82,18 @@ namespace RealtimeCSG.Helpers
                         }
 						
 						GUI.changed = true;
-						evt.Use();
+						e.Use();
 					}
 					break;
 				}
 				case EventType.MouseUp:
 				{
-					if (GUIUtility.hotControl == id && (evt.button == 0 || evt.button == 2))
+					if (GUIUtility.hotControl == id && (e.button == 0 || e.button == 2))
 					{
 						GUIUtility.hotControl = 0;
 						if (shutdownFunction != null)
 							shutdownFunction();
-						evt.Use();
+						e.Use();
 						EditorGUIUtility.SetWantsMouseJumping(0);
 					}
 					break;

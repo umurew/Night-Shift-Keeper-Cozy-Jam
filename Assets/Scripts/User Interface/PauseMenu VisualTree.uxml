@@ -1,0 +1,36 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/User%20Interface/PauseMenu%20StyleSheet.uss?fileID=7433441132597879392&amp;guid=024657d63091b1a4ea3d62b3ffb718a4&amp;type=3#PauseMenu StyleSheet"/>
+    <VisualElement name="pause-container" class="pause-overlay">
+
+        <VisualElement name="pause-menu-box" class="pause-menu-box">
+            <Label text="PAUSED" class="pause-title"/>
+            <Button name="resume-button" text="RESUME" class="pause-button"/>
+            <Button name="settings-button" text="SETTINGS" class="pause-button"/>
+            <Label text="It doesn't really pause the game lol." class="text"/>
+        </VisualElement>
+
+        <VisualElement name="settings-container" class="pause-menu-box hidden">
+            <Label text="SETTINGS" class="pause-title" />
+            
+            <VisualElement style="width: 100%; margin-bottom: 20px;">
+                <VisualElement class="setting-row">
+                    <Label text="RESOLUTION" class="setting-label" />
+                    <DropdownField name="resolution-dropdown" class="setting-control" />
+                </VisualElement>
+
+                <VisualElement class="setting-row">
+                    <Label text="VOLUME" class="setting-label" />
+                    <Slider name="volume-slider" class="setting-control" low-value="0" high-value="1" />
+                </VisualElement>
+                
+                <VisualElement class="setting-row">
+                    <Label text="FULLSCREEN" class="setting-label" />
+                    <Toggle name="fullscreen-toggle" class="setting-control" />
+                </VisualElement>
+            </VisualElement>
+            
+            <Button name="settings-back-button" class="pause-button" text="BACK" />
+        </VisualElement>
+
+    </VisualElement>
+</UXML>

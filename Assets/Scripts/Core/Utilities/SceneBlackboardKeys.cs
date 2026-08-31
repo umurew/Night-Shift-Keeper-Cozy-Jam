@@ -5,15 +5,19 @@ public static class SceneBlackboardKeys
         public static class Flashlight
         {
             public const string IsEquipped = "player_flashlight_isEquipped";
-            public const string IsEnabled = "player_flashlight_isEnabled";
             public const string CanEquip = "player_flashlight_canEquip";
-            public const string CanEnable = "player_flashlight_canEnable";
         }
 
         public static class Mop
         {
             public const string IsEquipped = "player_mop_isEquipped";
             public const string Interactable = "player_mop_interactable";
+        }
+
+        public static class Shotgun
+        {
+            public const string IsEquipped = "player_shotgun_isEquipped";
+            public const string CanEquip = "player_shotgun_canEquip";
         }
 
         public const string CanSprint = "player_canSprint";
@@ -64,6 +68,29 @@ public static class SceneBlackboardKeys
             public static class SquareEntrance
             {
                 public const string IsActive = "scene_barriers_squareentrance_isActive";
+            }
+        }
+
+        public static class Waypoints
+        {
+            public static class Example
+            {
+                public const string IsActive = "scene_waypoints_id_isActive";
+            }
+
+            public static class Office
+            {
+                public const string IsActive = "scene_waypoints_office_isActive";
+            }
+
+            public static class Graffiti
+            {
+                public const string IsActive = "scene_waypoints_graffiti_isActive";
+            }
+
+            public static class Generator
+            {
+                public const string IsActive = "scene_waypoints_generator_isActive";
             }
         }
     }

@@ -24,8 +24,8 @@ namespace RealtimeCSG.Helpers
             if (Mathf.Abs(Vector3.Dot(camera.transform.forward, axis)) > .999f)
 				cutoffPlane = false;
 
-			var evt = Event.current;
-			switch (evt.GetTypeForControl(id))
+			var e = Event.current;
+			switch (e.GetTypeForControl(id))
 			{
 				case EventType.Layout:
 				{
@@ -46,8 +46,8 @@ namespace RealtimeCSG.Helpers
 				{ 
 					if (CSGHandles.disabled)
 						break;
-					if (((HandleUtility.nearestControl == id && evt.button == 0) || 
-					 	 (GUIUtility.keyboardControl == id && evt.button == 2)) && GUIUtility.hotControl == 0)
+					if (((HandleUtility.nearestControl == id && e.button == 0) || 
+					 	 (GUIUtility.keyboardControl == id && e.button == 2)) && GUIUtility.hotControl == 0)
 					{
 						if (initFunction != null)
 							initFunction();
@@ -65,7 +65,7 @@ namespace RealtimeCSG.Helpers
 						s_StartRotation = rotation;
 						s_StartAxis = axis;
 						s_CurrentMousePosition = s_StartMousePosition = Event.current.mousePosition;
-						evt.Use();
+						e.Use();
 						EditorGUIUtility.SetWantsMouseJumping(1);
 					}
 					break;
@@ -75,23 +75,23 @@ namespace RealtimeCSG.Helpers
 					if (GUIUtility.hotControl == id)
 					{
 						var direction = Vector3.Cross(axis, position - s_StartPosition).normalized;
-						s_CurrentMousePosition += evt.delta;
+						s_CurrentMousePosition += e.delta;
 						s_RotationDist = HandleUtility.CalcLineTranslation(s_StartMousePosition, s_CurrentMousePosition, s_StartPosition, direction) / size * 30;
 						s_RotationDist = SnapValue(s_RotationDist, snap, snapping);
 						rotation = Quaternion.AngleAxis(s_RotationDist * -1, s_StartAxis) * s_StartRotation;
 						
 						GUI.changed = true;
-						evt.Use();
+						e.Use();
 					}
 					break;
 				}
 				case EventType.MouseUp:
 				{
-					if (GUIUtility.hotControl == id && (evt.button == 0 || evt.button == 2))
+					if (GUIUtility.hotControl == id && (e.button == 0 || e.button == 2))
 					{
 						//Tools.UnlockHandlePosition();
 						GUIUtility.hotControl = 0;
-						evt.Use();
+						e.Use();
 						if (shutdownFunction != null)
 							shutdownFunction();
 						EditorGUIUtility.SetWantsMouseJumping(0);
@@ -100,7 +100,7 @@ namespace RealtimeCSG.Helpers
 				}
 				case EventType.KeyDown:
 				{
-					if (evt.keyCode == KeyCode.Escape && GUIUtility.hotControl == id)
+					if (e.keyCode == KeyCode.Escape && GUIUtility.hotControl == id)
 					{
 						// We do not use the event nor clear hotcontrol to ensure auto revert value kicks in from native side
 						//Tools.UnlockHandlePosition();

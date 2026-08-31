@@ -1,6 +1,7 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SceneBlackboard", menuName = "Scriptable Objects/Scene Blackboard")]
@@ -87,50 +88,66 @@ public class SceneBlackboard : ScriptableObject
         _keyEventDictionary.Clear();
     }
 
-    public async Task WaitUntilKeyExists(string key)
+    public async UniTask WaitUntilKeyExists(string key, CancellationToken cancellationToken = default)
     {
         if (_stateDictionary.ContainsKey(key))
             return;
 
         Debug.Log($"Thread waiting for the key \"{key}\"");
 
-        var tcs = new TaskCompletionSource<bool>();
+        var utcs = new UniTaskCompletionSource();
 
         void OnChanged(string updatedKey, object value)
         {
             if (updatedKey == key)
             {
                 OnStateChanged -= OnChanged;
-                tcs.TrySetResult(true);
+                utcs.TrySetResult();
             }
         }
 
         OnStateChanged += OnChanged;
 
-        await tcs.Task;
+        // Unregister the event if the calling object is destroyed while waiting
+        using (cancellationToken.Register(() =>
+        {
+            OnStateChanged -= OnChanged;
+            utcs.TrySetCanceled(cancellationToken);
+        }))
+        {
+            await utcs.Task;
+        }
     }
 
-    public async Task<T> WaitUntilKeyMatches<T>(string key, T expectedValue)
+    public async UniTask<T> WaitUntilKeyMatches<T>(string key, T expectedValue, CancellationToken cancellationToken = default)
     {
         if (TryGet(key, out T currentValue) && Equals(currentValue, expectedValue))
             return currentValue;
 
         Debug.Log($"Thread waiting for the \"{key}\" to match \"{expectedValue}\"");
 
-        var tcs = new TaskCompletionSource<T>();
+        var utcs = new UniTaskCompletionSource<T>();
 
         void OnChanged(string updatedKey, object value)
         {
             if (updatedKey == key && value is T typedValue && Equals(typedValue, expectedValue))
             {
                 OnStateChanged -= OnChanged;
-                tcs.TrySetResult(typedValue);
+                utcs.TrySetResult(typedValue);
             }
         }
 
         OnStateChanged += OnChanged;
 
-        return await tcs.Task;
+        // Unregister the event if the calling object is destroyed while waiting
+        using (cancellationToken.Register(() =>
+        {
+            OnStateChanged -= OnChanged;
+            utcs.TrySetCanceled(cancellationToken);
+        }))
+        {
+            return await utcs.Task;
+        }
     }
 
     private void OnEnable() => ResetStates();

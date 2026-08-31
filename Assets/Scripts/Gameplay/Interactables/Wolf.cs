@@ -166,7 +166,7 @@ public class Wolf : MonoBehaviour, IInteractable
 
             _currentFear += noiseFear * Time.deltaTime;
 
-            if (_sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Flashlight.IsEnabled))
+            if (_sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Flashlight.IsEquipped))
             {
                 Vector3 directionToWolf = (transform.position - _playerTransform.position).normalized;
                 float angle = Vector3.Angle(_playerTransform.forward, directionToWolf);

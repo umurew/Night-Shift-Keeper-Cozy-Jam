@@ -20,6 +20,7 @@ public class PlayerFlashlight : MonoBehaviour
 
     private bool _initialized = false;
     private bool _flashlightEquipped = false;
+    private bool _canEquipFlashlight = false;
     private bool _debounce = false;
 
     private Dictionary<string, int> _animationHashes;
@@ -37,8 +38,20 @@ public class PlayerFlashlight : MonoBehaviour
             { "FlashlightEquipped", Animator.StringToHash("FlashlightEquipped") },
         };
 
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Player.Flashlight.CanEquip, () =>
+        {
+            if (_canEquipFlashlight != _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Flashlight.CanEquip))
+                _canEquipFlashlight = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Flashlight.CanEquip);
+        });
+
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Player.Flashlight.IsEquipped, () =>
+        {
+            if (_flashlightEquipped != _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Flashlight.IsEquipped))
+                _flashlightEquipped = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Flashlight.IsEquipped);
+        });
+
         _initialized = true;
-        Debug.Log($"{GetType().Name} initialized with the following dependencies: {inputService.GetType().Name} | {sceneBlackboard.GetType().Name} | {playerDialog.GetType().Name}");
+        Debug.Log($"{GetType().Name} initialized with dependencies: {inputService.GetType().Name} | {sceneBlackboard.GetType().Name} | {playerDialog.GetType().Name}");
     }
 
     private void Update()
@@ -46,11 +59,17 @@ public class PlayerFlashlight : MonoBehaviour
         if (!_initialized)
             return;
 
-        if (!_debounce && _inputService.PlayerActions.ToggleFlashlight.WasPressedThisFrame())
+        if (_canEquipFlashlight && !_debounce && _inputService.PlayerActions.ToggleFlashlight.WasPressedThisFrame())
         {
             if (_sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Mop.IsEquipped))
             {
                 _playerDialog.ExecuteDialog("I should put the mop away first.");
+                return;
+            }
+
+            if (_sceneBlackboard.Get<bool>(SceneBlackboardKeys.Player.Shotgun.IsEquipped))
+            {
+                _playerDialog.ExecuteDialog("I should put the shotgun away first.");
                 return;
             }
 
@@ -71,11 +90,11 @@ public class PlayerFlashlight : MonoBehaviour
 
     private void UpdateLayerWeight()
     {
-        int viewmodelLayerIndex = animator.GetLayerIndex("Viewmodel Layer");
+        int viewmodelLayerIndex = animator.GetLayerIndex("Flashlight Layer");
 
         if (viewmodelLayerIndex == -1)
         {
-            Debug.LogWarning($"Viewmodel layer was not found.");
+            Debug.LogWarning($"Flashlight layer was not found.");
             return;
         }
 

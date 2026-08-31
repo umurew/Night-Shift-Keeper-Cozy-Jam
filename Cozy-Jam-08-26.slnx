@@ -1,8 +1,14 @@
 ﻿<Solution>
   <Project Path="Assembly.Gameplay.csproj" />
+  <Project Path="UniTask.csproj" />
   <Project Path="RealtimeCSG.csproj" />
+  <Project Path="UniTask.Linq.csproj" />
+  <Project Path="UniTask.Addressables.csproj" />
   <Project Path="DOTween.Modules.csproj" />
   <Project Path="Assembly.Core.csproj" />
+  <Project Path="UniTask.TextMeshPro.csproj" />
   <Project Path="Assembly.Services.csproj" />
+  <Project Path="UniTask.Editor.csproj" />
+  <Project Path="UniTask.DOTween.csproj" />
   <Project Path="Assembly.Runtime.csproj" />
 </Solution>

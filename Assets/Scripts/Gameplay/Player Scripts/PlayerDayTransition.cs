@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -32,7 +33,7 @@ public class PlayerDayTransition : MonoBehaviour
         Debug.Log($"{GetType().Name} initialized.");
     }
 
-    public async Awaitable ExecuteAsync(Action action)
+    public async UniTask ExecuteAsync(Action action)
     {
         if (!_initialized)
             return;
@@ -40,7 +41,7 @@ public class PlayerDayTransition : MonoBehaviour
         await ExecuteDayTransitionAsync(_sceneBlackboard.Get<int>(SceneBlackboardKeys.Scene.Day), _sceneBlackboard.Get<string>(SceneBlackboardKeys.Scene.DayDescription), action);
     }
 
-    private async Awaitable ExecuteDayTransitionAsync(int day, string dayDescription, Action action)
+    private async UniTask ExecuteDayTransitionAsync(int day, string dayDescription, Action action)
     {
         _overlayElement.style.display = DisplayStyle.Flex;
 
@@ -48,14 +49,14 @@ public class PlayerDayTransition : MonoBehaviour
         _subLabel.text = dayDescription;
 
         _overlayElement.AddToClassList("overlay-visible");
-        await Awaitable.WaitForSecondsAsync(0.5f);
+        await UniTask.Delay(TimeSpan.FromSeconds(0.5f), cancellationToken: this.GetCancellationTokenOnDestroy());
 
         action();
 
-        await Awaitable.WaitForSecondsAsync(fadeDuration + overlayDuration);
+        await UniTask.Delay(TimeSpan.FromSeconds(fadeDuration + overlayDuration), cancellationToken: this.GetCancellationTokenOnDestroy());
 
         _overlayElement.RemoveFromClassList("overlay-visible");
-        await Awaitable.WaitForSecondsAsync(fadeDuration);
+        await UniTask.Delay(TimeSpan.FromSeconds(fadeDuration), cancellationToken: this.GetCancellationTokenOnDestroy());
 
         _overlayElement.style.display = DisplayStyle.None;
     }

@@ -2,10 +2,12 @@
     "name": "Assembly.Runtime",
     "rootNamespace": "",
     "references": [
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:4307f53044263cf4b835bd812fc161a4",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
         "GUID:a68fc8f33c6146f4eb4055b078154459",
         "GUID:784016a72d628694db72e64a93fe76b1",
-        "GUID:9bb46abf03a5fac469c7ce1086d5dc5c",
-        "GUID:4307f53044263cf4b835bd812fc161a4"
+        "GUID:9bb46abf03a5fac469c7ce1086d5dc5c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

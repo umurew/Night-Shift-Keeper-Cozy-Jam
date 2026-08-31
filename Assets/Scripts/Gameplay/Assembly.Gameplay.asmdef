@@ -2,9 +2,11 @@
     "name": "Assembly.Gameplay",
     "rootNamespace": "",
     "references": [
-        "GUID:a68fc8f33c6146f4eb4055b078154459",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:029c1c1b674aaae47a6841a0b89ad80e",
         "GUID:0c40b762816100f489a9130a073cc725",
-        "GUID:75469ad4d38634e559750d17036d5f7c"
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:a68fc8f33c6146f4eb4055b078154459"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

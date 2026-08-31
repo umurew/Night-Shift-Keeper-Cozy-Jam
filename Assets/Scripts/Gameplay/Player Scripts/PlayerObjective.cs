@@ -66,7 +66,7 @@ public class PlayerObjective : MonoBehaviour
         RemoveObjectives(true);
 
         _initialized = true;
-        Debug.Log($"{GetType().Name} initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
+        Debug.Log($"{GetType().Name} initialized with dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     private async void RemoveObjectives(bool self = false)
@@ -104,6 +104,8 @@ public class PlayerObjective : MonoBehaviour
         _objectiveContainer.Clear();
         _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Objectives.ObjectiveCount, 0);
     }
+
+    public void ClearObjectives() => _objectiveContainer.Clear();
 
     private async Task AddMainObjective(string text)
     {

@@ -26,7 +26,7 @@ public class InputService : ServiceBase, IInputService
 
         DisablePlayerControls();
 
-        Debug.Log($"{GetType().Name} initialized with the following dependencies: Input Actions");
+        Debug.Log($"{GetType().Name} initialized with dependencies: Input Actions");
     }
 
     public void SetCursorState(bool isLocked)
@@ -40,6 +40,9 @@ public class InputService : ServiceBase, IInputService
         SetCursorState(true);
         ToggleCameraInput(true);
         PlayerActions.Enable();
+        UIActions.Enable();
+        _inputActions.Player.Enable();
+        _inputActions.UI.Enable();
     }
 
     public void DisablePlayerControls()
@@ -47,6 +50,9 @@ public class InputService : ServiceBase, IInputService
         SetCursorState(false);
         ToggleCameraInput(false);
         PlayerActions.Disable();
+        UIActions.Disable();
+        _inputActions.Player.Disable();
+        _inputActions.UI.Disable();
     }
 
     public void Dispose()

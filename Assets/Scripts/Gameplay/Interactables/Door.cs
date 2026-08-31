@@ -78,9 +78,23 @@ public class Door : MonoBehaviour, IInteractable
             }
         });
 
+        _sceneBlackboard.ListenTo(SceneBlackboardKeys.Door.Opened, () =>
+        {
+            if (_isDoorOpened != _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Door.Opened))
+            {
+                _isDoorOpened = _sceneBlackboard.Get<bool>(SceneBlackboardKeys.Door.Opened);
+                float targetAngle = _isDoorOpened ? angle : 0f;
+
+                if (inwards)
+                    targetAngle = -targetAngle;
+
+                _targetRotation = _closedRotation * Quaternion.Euler(0f, targetAngle, 0f);
+            }
+        });
+
         Interactable = false;
         _initialized = true;
-        Debug.Log($"{GetType().Name} ({id}) initialized with the following dependencies: {sceneBlackboard.GetType().Name}");
+        Debug.Log($"{GetType().Name} ({id}) initialized with dependencies: {sceneBlackboard.GetType().Name}");
     }
 
     public bool IsLocked() => locked;

@@ -59,8 +59,8 @@ namespace RealtimeCSG.Helpers
 			var rotation = Quaternion.LookRotation(handleDir, slideDir1);
 			var deltaDistanceAlongDirections = new Vector2(0, 0);
 
-			var evt = Event.current;
-			switch (evt.GetTypeForControl(id))
+			var e = Event.current;
+			switch (e.GetTypeForControl(id))
 			{
 				case EventType.Layout:
 				{
@@ -74,20 +74,20 @@ namespace RealtimeCSG.Helpers
 				{
 					if (CSGHandles.disabled)
 						break;
-					if (((HandleUtility.nearestControl == id && evt.button == 0) ||
-						(GUIUtility.keyboardControl == id && evt.button == 2)) && GUIUtility.hotControl == 0)
+					if (((HandleUtility.nearestControl == id && e.button == 0) ||
+						(GUIUtility.keyboardControl == id && e.button == 2)) && GUIUtility.hotControl == 0)
 					{
 						s_SnapVertices = null;
 						if (initFunction != null)
 							initFunction();
 
 						var plane		= new Plane(Handles.matrix.MultiplyVector(handleDir), Handles.matrix.MultiplyPoint(handlePos));
-						var mouseRay	= HandleUtility.GUIPointToWorldRay(evt.mousePosition);
+						var mouseRay	= HandleUtility.GUIPointToWorldRay(e.mousePosition);
 						var dist		= 0.0f;
 						plane.Raycast(mouseRay, out dist);
 
 						GUIUtility.hotControl = GUIUtility.keyboardControl = id;
-						s_CurrentMousePosition = evt.mousePosition;
+						s_CurrentMousePosition = e.mousePosition;
 						s_StartPosition = handlePos;
 
 						var localMousePoint		= Handles.inverseMatrix.MultiplyPoint(mouseRay.GetPoint(dist));
@@ -95,7 +95,7 @@ namespace RealtimeCSG.Helpers
 						s_StartPlaneOffset.x = Vector3.Dot(clickOffset, slideDir1);
 						s_StartPlaneOffset.y = Vector3.Dot(clickOffset, slideDir2);
 
-						evt.Use();
+						e.Use();
 						EditorGUIUtility.SetWantsMouseJumping(1);
 					}
 					break;
@@ -104,7 +104,7 @@ namespace RealtimeCSG.Helpers
 				{
 					if (GUIUtility.hotControl == id)
 					{
-						s_CurrentMousePosition += evt.delta;
+						s_CurrentMousePosition += e.delta;
 						var worldPosition	= Handles.matrix.MultiplyPoint(handlePos);
 						var worldSlideDir1	= Handles.matrix.MultiplyVector(slideDir1).normalized;
 						var worldSlideDir2	= Handles.matrix.MultiplyVector(slideDir2).normalized;
@@ -122,16 +122,16 @@ namespace RealtimeCSG.Helpers
 							
 							GUI.changed = true;
 						}
-						evt.Use();
+						e.Use();
 					}
 					break;
 				}
 				case EventType.MouseUp:
 				{
-					if (GUIUtility.hotControl == id && (evt.button == 0 || evt.button == 2))
+					if (GUIUtility.hotControl == id && (e.button == 0 || e.button == 2))
 					{
 						GUIUtility.hotControl = 0;
-						evt.Use();
+						e.Use();
 						if (shutdownFunction != null)
 							shutdownFunction();
 						EditorGUIUtility.SetWantsMouseJumping(0);

@@ -78,7 +78,7 @@ public class PlayerMovement : MonoBehaviour
         });
 
         _initialized = true;
-        Debug.Log($"{GetType().Name} initialized with the following dependencies: {inputService.GetType().Name} | {cameraTransform.GetType().Name} | {sceneBlackboard.GetType().Name}");
+        Debug.Log($"{GetType().Name} initialized with dependencies: {inputService.GetType().Name} | {cameraTransform.GetType().Name} | {sceneBlackboard.GetType().Name}");
     }
 
     private void Update()
