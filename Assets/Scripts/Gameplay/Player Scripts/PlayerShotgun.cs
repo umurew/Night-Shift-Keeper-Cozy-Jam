@@ -10,6 +10,7 @@ public class PlayerShotgun : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private ParentConstraint parentConstraint;
     [SerializeField] private GameObject shotgun;
+    [SerializeField] private AudioClip impactClip;
 
     [Space(10)]
     [SerializeField] private GameObject barrelLight;
@@ -145,6 +146,7 @@ public class PlayerShotgun : MonoBehaviour
 
         audioSource.PlayOneShot(shotgunShootClip, 1);
         animator.SetTrigger(_animationHashes["ShotgunShoot"]);
+        audioSource.PlayOneShot(impactClip);
 
         Raycast();
         yield return shootDelay;
@@ -187,17 +189,12 @@ public class PlayerShotgun : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, weaponRange, shootableLayer))
         {
-            Debug.Log("Direct hit on: " + hit.collider.gameObject.name);
-
-            // You can add your damage logic here. For example:
-            // Enemy enemyScript = hit.collider.GetComponent<Enemy>();
-            // if (enemyScript != null) { enemyScript.TakeDamage(10); }
+            if (hit.collider.GetComponentInParent<Elk>() != null)
+                hit.collider.GetComponentInParent<Elk>().DealDamage();
 
             Debug.DrawLine(ray.origin, hit.point, Color.red, 2f);
         }
         else
-        {
             Debug.DrawRay(ray.origin, ray.direction * weaponRange, Color.green, 2f);
-        }
     }
 }

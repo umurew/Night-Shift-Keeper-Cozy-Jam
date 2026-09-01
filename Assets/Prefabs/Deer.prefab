@@ -233,8 +233,8 @@ MonoBehaviour:
   detectionRadius: 30
   maxFearThreshold: 40
   fearDecayRate: 15
-  noiseFearMultiplier: 20
-  flashlightFearRate: 25
+  noiseFearMultiplier: 30
+  flashlightFearRate: 30
   flashlightAngle: 50
   fleeDuration: 3
 --- !u!1 &940019239526843694

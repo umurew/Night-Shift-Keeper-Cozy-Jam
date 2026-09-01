@@ -24,7 +24,7 @@ public class PlayerObjective : MonoBehaviour
 
         _sceneBlackboard.ListenTo(SceneBlackboardKeys.Scene.Objectives.SubObjective, async () => await AddSubObjective(_sceneBlackboard.Get<string>(SceneBlackboardKeys.Scene.Objectives.SubObjective)));
 
-        _sceneBlackboard.ListenTo($"{SceneBlackboardKeys.Scene.Objectives.MainObjective}{SceneBlackboardKeys.Suffix.Completed}", async () =>
+        _sceneBlackboard.ListenTo($"{SceneBlackboardKeys.Scene.Objectives.MainObjective}{SceneBlackboardKeys.CompletedSuffix}", async () =>
         {
             VisualElement objectiveHeader = _objectiveContainer.Q<VisualElement>(null, "objective-header") ?? throw new NullReferenceException($"Objective header was null!");
             Label headerText = objectiveHeader.Q<Label>(null, "header-text") ?? throw new NullReferenceException($"Objective header's Label element was null!");
@@ -35,9 +35,9 @@ public class PlayerObjective : MonoBehaviour
             RemoveObjectives();
         });
 
-        _sceneBlackboard.ListenTo($"{SceneBlackboardKeys.Scene.Objectives.SubObjective}{SceneBlackboardKeys.Suffix.Completed}", () =>
+        _sceneBlackboard.ListenTo($"{SceneBlackboardKeys.Scene.Objectives.SubObjective}{SceneBlackboardKeys.CompletedSuffix}", () =>
         {
-            string rawObjectiveQuery = _sceneBlackboard.Get<string>($"{SceneBlackboardKeys.Scene.Objectives.SubObjective}{SceneBlackboardKeys.Suffix.Completed}");
+            string rawObjectiveQuery = _sceneBlackboard.Get<string>($"{SceneBlackboardKeys.Scene.Objectives.SubObjective}{SceneBlackboardKeys.CompletedSuffix}");
             string objectiveText = rawObjectiveQuery[1..];
 
             VisualElement subObjectiveList = _objectiveContainer.Q<VisualElement>("sub-objective-list") ?? throw new NullReferenceException($"Sub-objective list was null!");

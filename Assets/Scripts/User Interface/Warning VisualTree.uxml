@@ -1,0 +1,4 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/User%20Interface/Warning%20StyleSheet.uss?fileID=7433441132597879392&amp;guid=51c4f42c7b8c3b945a01373ef2ca604f&amp;type=3#Warning StyleSheet"/>
+    <Label name="warning-label" class="warning-label" text="PRESS G !!"/>
+</UXML>

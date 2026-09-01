@@ -1,0 +1,23 @@
+.background-container {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0.85);
+    justify-content: center;
+    align-items: center;
+}
+
+.menu-box {
+    align-items: center;
+    width: 40%;
+    padding: 40px;
+    background-color: rgb(20, 20, 20);
+    border-width: 4px;
+    border-color: rgb(149, 25, 25);
+}
+
+.title-text {
+    font-size: 60px;
+    -unity-font-style: bold;
+    color: rgb(180, 28, 28);
+    margin-bottom: 10px;
+    -unity-font-definition: url("project://database/Assets/Fonts/PixeloidSans-Bold.ttf?fileID=12800000&guid=e9e27104f5b09db42ba201a0fcc31f1b&type=3#PixeloidSans-Bold");
+}

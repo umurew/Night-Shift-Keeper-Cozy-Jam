@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.UIElements;
 
 public class Bootstrapper : MonoBehaviour
@@ -21,6 +22,9 @@ public class Bootstrapper : MonoBehaviour
     [SerializeField] private GameObject officeSpawnpoint;
     [SerializeField] private GameObject parkingLotSpawnpoint;
     [SerializeField] private List<GameObject> carSpawnpoints;
+    [SerializeField] private Transform deerForestCenter;
+    [SerializeField] private GameObject firstSight;
+    [SerializeField] private Transform escapeDestionation;
 
     [Space(10)]
     [SerializeField] private GameObject player;
@@ -34,6 +38,7 @@ public class Bootstrapper : MonoBehaviour
     [Header("Prefab References")]
     [SerializeField] private InputService inputServicePrefab;
     [SerializeField] private AudioSource ambiencePlayer;
+    [SerializeField] private Elk elkPrefab;
 
     private InputService _inputService;
     private SceneBlackboard _sceneBlackboard;
@@ -42,6 +47,7 @@ public class Bootstrapper : MonoBehaviour
     private PlayerMovement _playerMovement;
     private PlayerInteraction _playerInteraction;
     private PlayerDayTransition _playerDayTransition;
+    private PlayerWarning _playerWarning;
     private PlayerDialog _playerDialog;
     private PlayerFlashlight _playerFlashlight;
     private PlayerShotgun _playerShotgun;
@@ -51,6 +57,7 @@ public class Bootstrapper : MonoBehaviour
     private Computer _computer;
     private Phone _phone;
     private Mop _mop;
+    private Elk _elk;
 
     private async UniTaskVoid Awake()
     {
@@ -86,7 +93,9 @@ public class Bootstrapper : MonoBehaviour
         _inputService.EnablePlayerControls();
 
         _ambiencePlayer = Instantiate(ambiencePlayer, transform);
+        _ambiencePlayer.volume = 0;
         _ambiencePlayer.Play();
+        DOTween.To(() => _ambiencePlayer.volume, x => _ambiencePlayer.volume = x, 1, 0.3f);
     }
 
     private void InitializeSceneAndBehaviours()
@@ -118,8 +127,14 @@ public class Bootstrapper : MonoBehaviour
         _playerObjective = player.GetComponent<PlayerObjective>();
         _playerObjective.Initialize(_sceneBlackboard);
 
+        _playerWarning = player.GetComponent<PlayerWarning>();
+        _playerWarning.Initialize(_sceneBlackboard);
+
         PauseMenu pauseMenu = FindObjectsByType<PauseMenu>().FirstOrDefault();
         pauseMenu.Initialize(_inputService);
+
+        _elk = Instantiate(elkPrefab, transform);
+        _elk.Initialize(_sceneBlackboard, player.transform, escapeDestionation, player);
 
         // Initialize components which are in the scene
 
@@ -210,7 +225,7 @@ public class Bootstrapper : MonoBehaviour
         });
 
         // Play self-dialog
-        await _playerDialog.ExecuteDialogAsync("I should check-in.", 3);
+        await _playerDialog.ExecuteDialogAsync("I should check-in.");
 
         // Allow player to use Flashlight
         _sceneBlackboard.Set(SceneBlackboardKeys.Player.Flashlight.CanEquip, true);
@@ -417,6 +432,14 @@ public class Bootstrapper : MonoBehaviour
             // Allow player to play with the light switch
             _sceneBlackboard.Set($"office_{SceneBlackboardKeys.LightSwitch.Enabled}", true);
             _sceneBlackboard.Set($"office_{SceneBlackboardKeys.LightSwitch.Interactable}", true);
+            
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.Interactable}", true);
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.Locked}", false);
+
+            _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Barriers.SquareEntrance.IsActive, false);
+
+            // Allow player to use flashlight
+            _sceneBlackboard.Set(SceneBlackboardKeys.Player.Flashlight.CanEquip, true);
         });
 
         // Breathe delay
@@ -510,6 +533,16 @@ public class Bootstrapper : MonoBehaviour
         await _playerDialog.ExecuteDialogAsync("I will call it a day now.");
         SetSubObjective("Go to the office.");
 
+        _elk.transform.SetPositionAndRotation(firstSight.transform.position, firstSight.transform.rotation);
+
+        _sceneBlackboard.Set(SceneBlackboardKeys.Elk.IsVisible, true);
+
+        await UniTask.Delay(5000, cancellationToken: this.GetCancellationTokenOnDestroy());
+
+        _sceneBlackboard.Set(SceneBlackboardKeys.Elk.IsVisible, false);
+        await _playerDialog.ExecuteDialogAsync("W-what was that?");
+        await _playerDialog.ExecuteDialogAsync("I better hurry.");
+
         // Wait for player to get in the Office
         await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Player.InOffice, true);
 
@@ -536,10 +569,152 @@ public class Bootstrapper : MonoBehaviour
             // Allow player to interact
             _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanInteract, true);
 
-            // Enable light switch
+            // Allow player to play with the light switch
             _sceneBlackboard.Set($"office_{SceneBlackboardKeys.LightSwitch.Enabled}", true);
             _sceneBlackboard.Set($"office_{SceneBlackboardKeys.LightSwitch.Interactable}", true);
+
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.Interactable}", true);
+            _sceneBlackboard.Set($"office_{SceneBlackboardKeys.Door.Locked}", false);
+
+            _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Barriers.SquareEntrance.IsActive, false);
+
+            // Allow player to use flashlight
+            _sceneBlackboard.Set(SceneBlackboardKeys.Player.Flashlight.CanEquip, true);
+
+            // Disable second deer
+            foreach (Deer deer in FindObjectsByType<Deer>())
+            {
+                if (deer.name == "Deer2")
+                    deer.gameObject.SetActive(false);
+            }
         });
+
+        // Play self-dialog
+        await _playerDialog.ExecuteDialogAsync("Maybe I am getting paranoiac...");
+
+        // Ring the phone and make it interactable
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Ringing, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interactable, true);
+
+        // Wait until player picks up the phone
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Phone.Interacted, true);
+
+        // Reset the Phone
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interacted, false);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Interactable, false);
+
+        // Play dialog
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Speaking, Time.time);
+        await _playerDialog.ExecuteDialogAsync("We have given you a shotgun after you mentioned that thing from yesterday.", 4f, false);
+
+        // Play dialog
+        _sceneBlackboard.Set(SceneBlackboardKeys.Phone.Speaking, Time.time);
+        await _playerDialog.ExecuteDialogAsync("Take care of yourself and don't neglect animals!", 2f, false);
+
+        // Play self-dialogs
+        await _playerDialog.ExecuteDialogAsync("...");
+        await _playerDialog.ExecuteDialogAsync("I'm curious if he really cares about me.");
+
+        // [Main Objective]
+        SetMainObjective("Feed the animals and check surroundings.");
+
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanSprint, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.CanCrouch, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.Flashlight.CanEquip, true);
+
+        // [Sub Objective]
+        SetSubObjective("Feed wolves.");
+
+        // Reset wolves
+        _sceneBlackboard.Set(SceneBlackboardKeys.Wolf.CanFlee, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Wolf.Interactable, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Wolf.Fed, 0);
+
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Wolf.Fed, 3);
+        CompleteSubObjective();
+
+        _sceneBlackboard.Set(SceneBlackboardKeys.Wolf.Interactable, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Wolf.Fed, 0);
+
+        // [Sub Objective]
+        SetSubObjective("Feed deer.");
+
+        await _playerDialog.ExecuteDialogAsync("Perfect, now it's time to feed the deer.");
+
+        // Reset deer
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.CanFlee, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.Interactable, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Deer.Fed, 0);
+
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Deer.Fed, 1);
+        CompleteSubObjective();
+
+        await _playerDialog.ExecuteDialogAsync("Huh, where is the second one?");
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Warning.IsVisible, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.Shotgun.CanEquip, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Player.Flashlight.IsEquipped, false);
+
+        if (!TryGetRandomPointOnNavMesh(deerForestCenter.position, 5f, out Vector3 randomPosition))
+        {
+            foreach (Deer deer in FindObjectsByType<Deer>())
+            {
+                if (deer.name == "Deer1")
+                    randomPosition = deer.transform.position;
+            }
+        }
+
+        _elk.transform.position = randomPosition;
+        _elk.transform.DOLookAt(player.transform.position, 2f);
+        _elk.GetComponent<NavMeshAgent>().ResetPath();
+
+        _sceneBlackboard.Set(SceneBlackboardKeys.Elk.IsVisible, true);
+        _sceneBlackboard.Set(SceneBlackboardKeys.Elk.Screaming, true);
+
+        await UniTask.Delay(1500);
+
+        _sceneBlackboard.Set(SceneBlackboardKeys.Elk.Chasing, true);
+
+        await _sceneBlackboard.WaitUntilKeyMatches(SceneBlackboardKeys.Elk.Chasing, false);
+
+        if (_sceneBlackboard.Get<bool>("player_caught"))
+        {
+            GameOverController over = FindObjectsByType<GameOverController>().FirstOrDefault();
+            over.ShowGameOver();
+
+            await UniTask.Delay(3000);
+
+            return;
+        }
+
+        _sceneBlackboard.Set(SceneBlackboardKeys.Scene.Warning.IsVisible, false);
+
+        await _playerDialog.ExecuteDialogAsync("Oh my fucking god.");
+        await _playerDialog.ExecuteDialogAsync("I can't believe that I've survived that.");
+        await _playerDialog.ExecuteDialogAsync("I am leaving this job.", 4f);
+
+        Application.Quit();
+    }
+
+    public bool TryGetRandomPointOnNavMesh(Vector3 center, float range, out Vector3 result)
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            // Get a random point on a 2D circle instead of a 3D sphere
+            Vector2 randomCircle = UnityEngine.Random.insideUnitCircle * range;
+
+            // Apply it to the X and Z axes, keeping the original Y center
+            Vector3 randomPoint = center + new Vector3(randomCircle.x, 0, randomCircle.y);
+
+            // Increase the search distance (e.g., to 5.0f) to account for slopes/hills
+            if (NavMesh.SamplePosition(randomPoint, out NavMeshHit hit, 20.0f, NavMesh.AllAreas))
+            {
+                result = hit.position;
+                return true;
+            }
+        }
+
+        result = Vector3.zero;
+        return false;
     }
 
     private void MovePlayerToSpawnpoint(GameObject spawnpoint)
@@ -606,13 +781,13 @@ public class Bootstrapper : MonoBehaviour
     private void CompleteSubObjective()
     {
         string currentSubObjective = _sceneBlackboard.Get<string>(SceneBlackboardKeys.Scene.Objectives.SubObjective);
-        _sceneBlackboard.Set($"{SceneBlackboardKeys.Scene.Objectives.SubObjective}{SceneBlackboardKeys.Suffix.Completed}", currentSubObjective);
+        _sceneBlackboard.Set($"{SceneBlackboardKeys.Scene.Objectives.SubObjective}{SceneBlackboardKeys.CompletedSuffix}", currentSubObjective);
     }
 
     private void CompleteMainObjective()
     {
         string currentMainObjective = _sceneBlackboard.Get<string>(SceneBlackboardKeys.Scene.Objectives.MainObjective);
-        _sceneBlackboard.Set($"{SceneBlackboardKeys.Scene.Objectives.MainObjective}{SceneBlackboardKeys.Suffix.Completed}", currentMainObjective);
+        _sceneBlackboard.Set($"{SceneBlackboardKeys.Scene.Objectives.MainObjective}{SceneBlackboardKeys.CompletedSuffix}", currentMainObjective);
     }
 
     private void ResetBlackboardStates()

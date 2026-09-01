@@ -55,17 +55,24 @@ public class InputService : ServiceBase, IInputService
         _inputActions.UI.Disable();
     }
 
-    public void Dispose()
+    public void SetCameraSensitivity(float sensitivityValue)
     {
-        if (_inputActions != null)
+        foreach (CinemachineCamera cinemachineCamera in _cameras)
         {
-            PlayerActions.Disable();
-            UIActions.Disable();
-            _inputActions.Dispose();
-            _inputActions = null;
-        }
+            if (cinemachineCamera == null)
+                continue;
 
-        Debug.Log($"{GetType().Name} disposed.");
+            if (!cinemachineCamera.TryGetComponent(out CinemachineInputAxisController cinemachineInputAxisController))
+                continue;
+
+            foreach (var controller in cinemachineInputAxisController.Controllers)
+            {
+                if (controller.Name == "Look X (Pan)")
+                    controller.Input.Gain = sensitivityValue;
+                else if (controller.Name == "Look Y (Tilt)")
+                    controller.Input.Gain = -sensitivityValue;
+            }
+        }
     }
 
     private void ToggleCameraInput(bool isEnabled)
@@ -78,6 +85,19 @@ public class InputService : ServiceBase, IInputService
             if (cinemachineCamera.TryGetComponent(out CinemachineInputAxisController cinemachineInputAxisController))
                 cinemachineInputAxisController.enabled = isEnabled;
         }
+    }
+
+    public void Dispose()
+    {
+        if (_inputActions != null)
+        {
+            PlayerActions.Disable();
+            UIActions.Disable();
+            _inputActions.Dispose();
+            _inputActions = null;
+        }
+
+        Debug.Log($"{GetType().Name} disposed.");
     }
 
     private void OnDestroy()

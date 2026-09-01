@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,6 +18,7 @@ public class PauseMenu : MonoBehaviour
     private Button _settingsBackButton;
 
     private Slider _volumeSlider;
+    private Slider _sensitivitySlider;
     private Toggle _fullscreenToggle;
     private DropdownField _resolutionDropdown;
 
@@ -35,11 +38,15 @@ public class PauseMenu : MonoBehaviour
         _settingsButton = root.Q<Button>("settings-button");
         _settingsBackButton = root.Q<Button>("settings-back-button");
         _volumeSlider = root.Q<Slider>("volume-slider");
+        _sensitivitySlider = root.Q<Slider>("sensitivity-slider");
         _fullscreenToggle = root.Q<Toggle>("fullscreen-toggle");
         _resolutionDropdown = root.Q<DropdownField>("resolution-dropdown");
 
         _pauseContainer.style.display = DisplayStyle.None;
         _isPaused = false;
+
+        _sensitivitySlider.value = 0.2f;
+        _sensitivitySlider.RegisterValueChangedCallback(OnSensitivityChanged);
 
         _volumeSlider.value = AudioListener.volume;
         _volumeSlider.RegisterValueChangedCallback(OnVolumeChanged);
@@ -123,6 +130,12 @@ public class PauseMenu : MonoBehaviour
         Debug.Log($"{GetType().Name} Volume: {e.newValue}");
     }
 
+    private void OnSensitivityChanged(ChangeEvent<float> e)
+    {
+        _inputService.SetCameraSensitivity(e.newValue);
+        Debug.Log($"{GetType().Name} Sensitivity: {e.newValue}");
+    }
+
     private void OnFullscreenChanged(ChangeEvent<bool> e)
     {
         Screen.fullScreen = e.newValue;
@@ -151,13 +164,8 @@ public class PauseMenu : MonoBehaviour
         if (_settingsBackButton != null)
             _settingsBackButton.clicked -= HideSettings;
 
-        if (_volumeSlider != null)
-            _volumeSlider.UnregisterValueChangedCallback(OnVolumeChanged);
-
-        if (_fullscreenToggle != null)
-            _fullscreenToggle.UnregisterValueChangedCallback(OnFullscreenChanged);
-
-        if (_resolutionDropdown != null)
-            _resolutionDropdown.UnregisterValueChangedCallback(OnResolutionChanged);
+        _volumeSlider?.UnregisterValueChangedCallback(OnVolumeChanged);
+        _fullscreenToggle?.UnregisterValueChangedCallback(OnFullscreenChanged);
+        _resolutionDropdown?.UnregisterValueChangedCallback(OnResolutionChanged);
     }
 }

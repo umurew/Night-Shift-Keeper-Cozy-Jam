@@ -6,7 +6,7 @@
             <Label text="PAUSED" class="pause-title"/>
             <Button name="resume-button" text="RESUME" class="pause-button"/>
             <Button name="settings-button" text="SETTINGS" class="pause-button"/>
-            <Label text="It doesn't really pause the game lol." class="text"/>
+            <Label text="This looks cool." class="text"/>
         </VisualElement>
 
         <VisualElement name="settings-container" class="pause-menu-box hidden">
@@ -19,13 +19,18 @@
                 </VisualElement>
 
                 <VisualElement class="setting-row">
+                    <Label text="FULLSCREEN" class="setting-label" />
+                    <Toggle name="fullscreen-toggle" class="setting-control" />
+                </VisualElement>
+
+                <VisualElement class="setting-row">
                     <Label text="VOLUME" class="setting-label" />
                     <Slider name="volume-slider" class="setting-control" low-value="0" high-value="1" />
                 </VisualElement>
-                
+
                 <VisualElement class="setting-row">
-                    <Label text="FULLSCREEN" class="setting-label" />
-                    <Toggle name="fullscreen-toggle" class="setting-control" />
+                    <Label text="SENSITIVITY" class="setting-label" />
+                    <Slider name="sensitivity-slider" class="setting-control" low-value="0.01" high-value="1" />
                 </VisualElement>
             </VisualElement>
             

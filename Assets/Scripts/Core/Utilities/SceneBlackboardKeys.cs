@@ -36,6 +36,11 @@ public static class SceneBlackboardKeys
         public const string DeerCount = "scene_deer_count";
         public const string WolfCount = "scene_wolf_count";
 
+        public static class Warning
+        {
+            public const string IsVisible = "scene_warning_isVisible";
+        }
+
         public static class Objectives
         {
             public const string MainObjective = "scene_objectives_mainObjective";
@@ -95,6 +100,13 @@ public static class SceneBlackboardKeys
         }
     }
 
+    public static class Elk
+    {
+        public const string IsVisible = "elk_isVisible";
+        public const string Chasing = "elk_chasing";
+        public const string Screaming = "elk_screaming";
+    }
+
     public static class Deer
     {
         public const string Interactable = "deer_interactable";
@@ -149,8 +161,5 @@ public static class SceneBlackboardKeys
         public const string Speaking = "phone_speaking";
     }
 
-    public static class Suffix
-    {
-        public const string Completed = "_completed";
-    }
+    public const string CompletedSuffix = "_completed";
 }

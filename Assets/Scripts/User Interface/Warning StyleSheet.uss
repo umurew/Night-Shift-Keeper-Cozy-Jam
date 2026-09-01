@@ -1,0 +1,21 @@
+.warning-label {
+    color: white;
+    align-self: center;
+    flex-grow: 0;
+    white-space: normal;
+    font-size: 48px;
+    top: 55%;
+    -unity-text-align: middle-center;
+    -unity-font-definition: url("project://database/Assets/Fonts/PixeloidSans-Bold.ttf?fileID=12800000&guid=e9e27104f5b09db42ba201a0fcc31f1b&type=3#PixeloidSans-Bold");
+    transition-property: color;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-in-out-cubic;
+}
+
+.warning-label-pulsing {
+    color: rgb(200, 0, 0);
+}
+
+.hidden {
+    display: none;
+}

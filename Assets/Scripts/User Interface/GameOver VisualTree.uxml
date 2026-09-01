@@ -1,0 +1,8 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/User%20Interface/GameOver%20StyleSheet.uss?fileID=7433441132597879392&amp;guid=f59cf9ef499a69c45bf32a9a95f73e69&amp;type=3#GameOver StyleSheet"/>
+    <VisualElement class="background-container">
+        <VisualElement class="menu-box">
+            <Label text="GAME OVER" name="TitleLabel" class="title-text"/>
+        </VisualElement>
+    </VisualElement>
+</UXML>
